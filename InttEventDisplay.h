@@ -158,14 +158,7 @@ class InttEventDisplay : public SubsysReco
   void getPHG4Truth(PHCompositeNode *topNode);
   void getNode(PHCompositeNode *topNode);
 
-  std::vector<Acts::Vector3> writeInttClusters(PHCompositeNode *topNode,
-					       TrkrClusterContainer *m_clusterMap, 
-					       ActsGeometry *m_tGeometry);
-
-  std::vector<Acts::Vector3> readInttClusters(PHCompositeNode *topNode,
-					       TrkrClusterContainer *m_clusmap, 
-					       ActsGeometry *m_tGeometry);
-
+  std::vector<Acts::Vector3> writeInttClusters(PHCompositeNode */*topNode*/);
 
 
   void initializeVariables();

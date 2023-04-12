@@ -36,8 +36,12 @@
 #include <g4eval/SvtxEvalStack.h>
 
 /// HEPMC truth includes
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored"-Wdeprecated-declarations"
 #include <HepMC/GenEvent.h>
 #include <HepMC/GenVertex.h>
+#pragma GCC diagnostic pop
+
 #include <phhepmc/PHHepMCGenEvent.h>
 #include <phhepmc/PHHepMCGenEventMap.h>
 
@@ -224,7 +228,7 @@ int InttEventDisplay::process_event(PHCompositeNode *topNode)
   cout<<"getnode"<<endl;
 
   //std::vector<Acts::Vector3> 
-  m_clusters = writeInttClusters(topNode, m_clusterMap, m_tGeometry);
+  m_clusters = writeInttClusters(topNode);
   cout<<"number of points is "<<m_clusters.size()<<endl<<endl<<endl<<endl;
   for(auto itr = m_clusters.begin(); itr != m_clusters.end();++itr ){
     auto cluster = itr[0];
@@ -241,7 +245,7 @@ int InttEventDisplay::process_event(PHCompositeNode *topNode)
  * End the module and finish any data collection. Clean up any remaining
  * loose ends
  */
-int InttEventDisplay::End(PHCompositeNode *topNode)
+int InttEventDisplay::End(PHCompositeNode */*topNode*/)
 {
   if (Verbosity() > 1)
   {
@@ -1124,9 +1128,7 @@ void InttEventDisplay::getNode(PHCompositeNode *topNode)
 }
 
 
-std::vector<Acts::Vector3> InttEventDisplay :: writeInttClusters(PHCompositeNode *topNode,							                           
-							    TrkrClusterContainer *m_clusterMap,
-							    ActsGeometry *m_tGeometry)
+std::vector<Acts::Vector3> InttEventDisplay :: writeInttClusters(PHCompositeNode */*topNode*/)
 {
     std::vector<TrkrDefs::cluskey> matchedClusters;
     std::vector<Acts::Vector3> clusters;
