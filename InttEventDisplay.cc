@@ -15,8 +15,8 @@
 #include <g4jets/JetMap.h>
 
 /// Tracking includes
-#include <g4vertex/GlobalVertex.h>
-#include <g4vertex/GlobalVertexMap.h>
+#include <globalvertex/GlobalVertex.h>
+#include <globalvertex/GlobalVertexMap.h>
 #include <trackbase_historic/SvtxTrack.h>
 #include <trackbase_historic/SvtxTrackMap.h>
 #include <trackbase_historic/SvtxVertex.h>
@@ -146,7 +146,7 @@ InttEventDisplay::~InttEventDisplay()
 /**
  * Initialize the module and prepare looping over events
  */
-int InttEventDisplay::Init(PHCompositeNode *topNode)
+int InttEventDisplay::Init(PHCompositeNode */*topNode*/)
 {
   if (Verbosity() > 5)
   {
@@ -158,10 +158,10 @@ int InttEventDisplay::Init(PHCompositeNode *topNode)
   m_phi_h = new TH1D("phi_h", ";Counts;#phi [rad]", 50, -6, 6);
   m_eta_phi_h = new TH2F("phi_eta_h", ";#eta;#phi [rad]", 10, -1, 1, 50, -6, 6);
 
-  cout<<"print print print"<<endl;
-  topNode->print();
-  cout<<"pripripirpint"<<endl;
-
+  //cout<<"print print print"<<endl;
+  //topNode->print();
+  //cout<<"pripripirpint"<<endl;
+  cout<<"finish intteventdisplay init"<<endl;
   return 0;
 }
 
@@ -1146,10 +1146,10 @@ std::vector<Acts::Vector3> InttEventDisplay :: writeInttClusters(PHCompositeNode
 		cout <<"cluskey="<<cluskey<<endl;
 		const auto cluster = clusIter->second;
 
-		cout<<"X = "<<cluster->getLocalX()<<", Y = "<<cluster->getLocalY()<<endl;
+		//cout<<"X = "<<cluster->getLocalX()<<", Y = "<<cluster->getLocalY()<<endl;
 
 		const auto globalPos = m_tGeometry->getGlobalPosition(cluskey, cluster);
-		cout<<"gX = "<<globalPos(0)<<", gY = "<<globalPos(1)<<" , gZ = "<<globalPos(2)<<endl;
+		//cout<<"gX = "<<globalPos(0)<<", gY = "<<globalPos(1)<<" , gZ = "<<globalPos(2)<<endl;
 
 		clusters.push_back(globalPos);
               }
