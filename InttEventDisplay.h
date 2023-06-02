@@ -4,6 +4,7 @@
 #include <fun4all/SubsysReco.h>
 #include <trackbase/TrkrDefs.h>
 #include <Acts/Definitions/Algebra.hpp>
+#include <TEveTrack.h>
 
 #include <vector>
 
@@ -47,7 +48,7 @@ class InttEventDisplay : public SubsysReco
  public:
   /// Constructor
   InttEventDisplay(const std::string &name = "InttEventDisplay",
-              const std::string &fname = "InttEventDisplay.root");
+		     const std::string &fname = "InttEventDisplay.root");
 
   // Destructor
   virtual ~InttEventDisplay();
@@ -82,8 +83,13 @@ class InttEventDisplay : public SubsysReco
     void drawHit();
     void make_ladderlocationfile();
     void DrawHit_rphi();
+    void DrawTracks();
+    void drawhits();
+    void Draw_rhoz_display();
 
     void clear();
+
+    bool Tracking;
 
   private:
     TCanvas *m_c1;
@@ -91,6 +97,7 @@ class InttEventDisplay : public SubsysReco
     std::vector<TMarker*> vPos;
 
     std::vector<Acts::Vector3> m_clusters;
+    std::vector<Acts::Vector3> m_tracks;
 
     std::vector<double> ladderALocationX;
     std::vector<double> ladderALocationY;
@@ -99,6 +106,9 @@ class InttEventDisplay : public SubsysReco
     std::vector<double> ladderBLocationX;
     std::vector<double> ladderBLocationY;
     std::vector<double> ladderBLocationZ;
+    
+    TEvePointSet * m_ps;
+    TEveTrackList * m_list;
   
   
 //////
@@ -159,7 +169,7 @@ class InttEventDisplay : public SubsysReco
   void getNode(PHCompositeNode *topNode);
 
   std::vector<Acts::Vector3> writeInttClusters(PHCompositeNode */*topNode*/);
-
+  std::vector<Acts::Vector3> writeInttTracks(PHCompositeNode *topNode);
 
   void initializeVariables();
   void initializeTrees();

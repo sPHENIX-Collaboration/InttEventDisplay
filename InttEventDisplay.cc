@@ -91,6 +91,8 @@
 #include <TEveScene.h>
 #include <TEveProjectionManager.h>
 #include <TEveProjectionAxes.h>
+#include <TEveTrack.h>
+#include <TEveTrackPropagator.h>
 #include <TGLOrthoCamera.h>
 #include <fun4all/Fun4AllDstOutputManager.h>
 //////////////
@@ -229,15 +231,31 @@ int InttEventDisplay::process_event(PHCompositeNode *topNode)
 
   //std::vector<Acts::Vector3> 
   m_clusters = writeInttClusters(topNode);
-  cout<<"number of points is "<<m_clusters.size()<<endl<<endl<<endl<<endl;
+  cout<<"number of clusters is "<<m_clusters.size()<<endl<<endl<<endl<<endl;
+  m_tracks = writeInttTracks(topNode);
+  cout<<"number of tracks is "<<m_tracks.size()<<endl<<endl<<endl<<endl;
+
+  for(auto itr = m_tracks.begin(); itr != m_tracks.end();++itr ){
+    auto track = itr[0];
+    cout <<"--------------"<<endl;	     
+    cout <<"itr = "  <<*itr << endl;
+    cout<<"px="<<track[0]<<"   py="<<track[1]<<"   pz="<<track[2]<<endl;
+    cout <<"--------------"<<endl<<endl<<endl<<endl<<endl;
+  }
+
+  
+  /*
   for(auto itr = m_clusters.begin(); itr != m_clusters.end();++itr ){
     auto cluster = itr[0];
     cout <<"--------------"<<endl;	     
     cout <<"itr = "  <<*itr << endl;
     cout<<"cluster[0]="<<cluster[0]<<"   cluster[1]="<<cluster[1]<<"   cluster[2]="<<cluster[2]<<endl;
-    cout <<"--------------"<<endl<<endl<<endl<<endl<<endl;
+    //cout <<"--------------"<<endl<<endl<<endl<<endl<<endl;
   }
+  */
   
+
+  cout<<"number of points is "<<m_clusters.size()<<endl<<endl<<endl<<endl;
   return Fun4AllReturnCodes::EVENT_OK;
 }
 
@@ -471,7 +489,7 @@ void InttEventDisplay::getTracks(PHCompositeNode *topNode)
 
   /// Get the range for primary tracks
   PHG4TruthInfoContainer *truthinfo = findNode::getClass<PHG4TruthInfoContainer>(topNode, "G4TruthInfo");
-
+  int count1 = 0;
   if (Verbosity() > 1)
   {
     cout << "Get the SVTX tracks" << endl;
@@ -521,8 +539,10 @@ void InttEventDisplay::getTracks(PHCompositeNode *topNode)
     m_truthtracketa = atanh(m_truthtrackpz / m_truthtrackp);
     m_truthtrackpid = truthtrack->get_pid();
 
+    count1 = count1 +1;
     m_tracktree->Fill();
   }
+  cout<<"get track loop ="<<count1<<endl;
 }
 
 /**
@@ -1143,7 +1163,7 @@ std::vector<Acts::Vector3> InttEventDisplay :: writeInttClusters(PHCompositeNode
 	    for (auto clusIter=range.first; clusIter!= range.second; ++clusIter)
 	      {
 		const auto cluskey = clusIter->first;
-		cout <<"cluskey="<<cluskey<<endl;
+		//cout <<"cluskey="<<cluskey<<endl;
 		const auto cluster = clusIter->second;
 
 		//cout<<"X = "<<cluster->getLocalX()<<", Y = "<<cluster->getLocalY()<<endl;
@@ -1253,6 +1273,66 @@ std::vector<Acts::Vector3> InttEventDisplay :: writeInttClusters(PHCompositeNode
       return clusters;
 }
 
+std::vector<Acts::Vector3> InttEventDisplay :: writeInttTracks(PHCompositeNode *topNode){
+  std::vector<Acts::Vector3> tracks;
+    /// SVTX tracks node
+    SvtxTrackMap *trackmap = findNode::getClass<SvtxTrackMap>(topNode, "SvtxTrackMap");
+
+    /*
+    if (!trackmap)
+    {
+        cout << PHWHERE
+             << "SvtxTrackMap node is missing, can't collect tracks"
+             << endl;
+    }
+    */
+
+   /// EvalStack for truth track matching
+    if (!m_svtxEvalStack)
+    {
+        m_svtxEvalStack = new SvtxEvalStack(topNode);
+        m_svtxEvalStack->set_verbosity(Verbosity());
+    }
+
+    m_svtxEvalStack->next_event(topNode);
+
+    /// Get the track evaluator
+    // SvtxTrackEval *trackeval = m_svtxEvalStack->get_track_eval();
+
+    /// Get the range for primary tracks
+    // PHG4TruthInfoContainer *truthinfo = findNode::getClass<PHG4TruthInfoContainer>(topNode, "G4TruthInfo");
+
+    Acts::Vector3 glob;
+    if (Verbosity() > 1)
+    {
+        cout << "Get the SVTX tracks" << endl;
+    }
+    for (unsigned int inttlayer = 0; inttlayer < m_nInttLayers; inttlayer++)
+    {
+      //for (const auto &hitsetkey : m_clusterMap->getHitSetKeys(TrkrDefs::TrkrId::inttId, inttlayer + 3)){
+            // cout <<"hitsetkey="<<hitsetkey<<endl;
+            //auto range = m_clusterMap->getClusters(hitsetkey);
+
+            //for (auto clusIter = range.first; clusIter != range.second; ++clusIter){
+                for (SvtxTrackMap::Iter iter = trackmap->begin();iter != trackmap->end();++iter)
+                {
+                    SvtxTrack *track = iter->second;
+
+                    /// Get the reconstructed track info
+                    m_tr_px = track->get_px();
+                    glob(0) = m_tr_px;
+                    m_tr_py = track->get_py();
+                    glob(1) = m_tr_py;
+                    m_tr_pz = track->get_pz();
+                    glob(2) = m_tr_pz;
+                    tracks.push_back(glob);
+                }
+		//}
+    
+    }
+    Tracking = true;
+    return tracks;
+    }
 
 void InttEventDisplay :: make_ladderlocationfile(){
   TFile * location = TFile::Open("/sphenix/u/mfujiwara/Documents/segmentlocation.root","RECREATE");
@@ -1280,13 +1360,17 @@ void InttEventDisplay :: DrawHit_rphi(){
    TEveGeoTopNode *geom = new TEveGeoTopNode(gGeoManager, gGeoManager->GetTopNode());
    gEve->AddGlobalElement(geom);
 
+   /*
    // camera
    TEveScene* s = gEve->SpawnNewScene("Projected Event");
    gEve->GetDefaultViewer()->AddScene(s);
    TGLViewer* v = gEve->GetDefaultGLViewer();
    v->SetCurrentCamera(TGLViewer::kCameraOrthoXOY);
-   TGLOrthoCamera& cam = (TGLOrthoCamera&) v->CurrentCamera();
-   cam.SetZoomMinMax(0.2, 20);
+   Double_t camcenter[3]={0.,0.,0.};
+   v->SetOrthoCamera(TGLViewer::kCameraOrthoXOY,15,50,&camcenter[0],0.,0.);
+   v->RequestDraw();
+   //TGLOrthoCamera& cam = (TGLOrthoCamera&) v->CurrentCamera();
+   //cam.SetZoomMinMax(5.0,10.);
    
    // projections
    TEveProjectionManager* mng =
@@ -1297,6 +1381,7 @@ void InttEventDisplay :: DrawHit_rphi(){
    s->AddElement(axes);
    gEve->AddToListTree(axes, kTRUE);
    gEve->AddToListTree(mng, kTRUE);
+   */
 
    //hit point
    int npoints = m_clusters.size();
@@ -1312,20 +1397,80 @@ void InttEventDisplay :: DrawHit_rphi(){
       ps->SetNextPoint(cluster[0], cluster[1], cluster[2]);
       ps->SetPointId(new TNamed(Form("Point %d", counter), ""));
       counter ++ ;
-      cout<<"itr = "<<*itr<<endl;
-      cout<<"cluster[0] = "<<cluster[0]<<"   cluster[1] = "<<cluster[1]<<"     cluster[2] = "<<cluster[2]<<endl;
+      //cout<<"itr = "<<*itr<<endl;
+      //cout<<"cluster[0] = "<<cluster[0]<<"   cluster[1] = "<<cluster[1]<<"     cluster[2] = "<<cluster[2]<<endl;
     }
  
     ps->SetMarkerColor(2);
-    ps->SetMarkerSize(1.0);
+    ps->SetMarkerSize(1.2);
     ps->SetMarkerStyle(4);
     gEve->AddElement(ps);
 
     geom->CanEditMainColor();
 
-    gEve->Redraw3D(kTRUE);
+    //gEve->Redraw3D(kTRUE);
 
-    cout<<"npoints = " <<npoints<<endl;
+    if(Tracking == true){
+    //set Magfield and draw Tracks
+    int numtrack = m_tracks.size();
+    cout<<"number of tracks = " <<numtrack<<endl;
+    
+    TEveTrackList *list = new TEveTrackList();
+    TEveTrackPropagator *prop = list->GetPropagator();
+    TEveTrack *track[numtrack];
+    TEveRecTrackD *rc = new TEveRecTrackD();
+    counter = 0;
+
+    prop->SetMagFieldObj(new TEveMagFieldConst(0., 0., 0.));
+
+    list->SetElementName(Form("%s, constB", list->GetElementName()));
+    list->SetLineColor(kMagenta);
+    for (auto itr = m_tracks.begin(); itr != m_tracks.end();++itr)
+    {   
+        auto moment = itr[0];
+        rc->fV.Set(0.0, 0.0, 0.0);
+        rc->fP.Set(moment[0],moment[1],moment[2]);
+        rc->fSign = 1;
+        track[counter] = new TEveTrack(rc, prop);
+	list->AddElement(track[counter]);
+	track[counter]->SetLineColor(list->GetLineColor());
+	track[counter]->MakeTrack();
+        counter ++;
+    }
+    
+    gEve->AddElement(list);
+    //gEve->Redraw3D(kTRUE);
+    //v->RequestDraw();
+
+    cout<<"number of hit points = " <<npoints<<endl;
+    cout<<"number of tracks ="<<numtrack<<endl;
+    }
+
+    // camera
+   TEveScene* s = gEve->SpawnNewScene("Projected Event");
+   gEve->GetDefaultViewer()->AddScene(s);
+   TGLViewer* v = gEve->GetDefaultGLViewer();
+   //v->SetCurrentCamera(TGLViewer::kCameraOrthoXOY);
+   Double_t camcenter[3]={0.,0.,0.};
+   v->SetOrthoCamera(TGLViewer::kCameraOrthoXOY,5,100,&camcenter[0],0.,0.);
+   //v->RequestDraw();
+   v->SetCurrentCamera(TGLViewer::kCameraOrthoXOY);
+   //TGLOrthoCamera& cam = (TGLOrthoCamera&) v->CurrentCamera();
+   //cam.SetZoomMinMax(5.0,10.);
+   
+   // projections
+   TEveProjectionManager* mng =
+      new TEveProjectionManager(TEveProjection::kPT_RPhi);
+   //mng->SetCenter(0,0,0);
+   s->AddElement(mng);
+   TEveProjectionAxes* axes = new TEveProjectionAxes(mng);
+   axes->SetTitle("TEveProjections demo");
+   s->AddElement(axes);
+   gEve->AddToListTree(axes, kTRUE);
+   gEve->AddToListTree(mng, kTRUE);
+   
+   gEve->Redraw3D(kFALSE,kFALSE);
+   v->RequestDraw();  
 }
 
 void InttEventDisplay :: DrawHits()
@@ -1348,12 +1493,12 @@ void InttEventDisplay :: DrawHits()
       ps->SetNextPoint(cluster[0], cluster[1], cluster[2]);
       ps->SetPointId(new TNamed(Form("Point %d", counter), ""));
       counter ++ ;
-      cout<<"itr = "<<*itr<<endl;
-      cout<<"cluster[0] = "<<cluster[0]<<"   cluster[1] = "<<cluster[1]<<"     cluster[2] = "<<cluster[2]<<endl;
+      //cout<<"itr = "<<*itr<<endl;
+      //cout<<"cluster[0] = "<<cluster[0]<<"   cluster[1] = "<<cluster[1]<<"     cluster[2] = "<<cluster[2]<<endl;
     }
  
     ps->SetMarkerColor(2);
-    ps->SetMarkerSize(1.0);
+    ps->SetMarkerSize(1.2);
     ps->SetMarkerStyle(4);
 
     //typeA center location
@@ -1393,10 +1538,43 @@ void InttEventDisplay :: DrawHits()
     }
     */
     //.X else
-    {
+    
        gEve->AddElement(ps);
        //gEve->AddElement(ps2);
        // gEve->AddElement(ps3);
+
+       //set Magfield and draw Tracks
+       if(Tracking == true){
+       int numtrack = m_tracks.size();
+       cout<<"number of tracks = " <<numtrack<<endl;
+    
+       TEveTrackList *list = new TEveTrackList();
+       TEveTrackPropagator *prop = list->GetPropagator();
+       TEveTrack *track[numtrack];
+       TEveRecTrackD *rc = new TEveRecTrackD();
+       counter = 0;
+
+       prop->SetMagFieldObj(new TEveMagFieldConst(0., 0., 0.));
+
+       list->SetElementName(Form("%s, constB", list->GetElementName()));
+       list->SetLineColor(kMagenta);
+       for (auto itr = m_tracks.begin(); itr != m_tracks.end();++itr)
+	 {   
+	   auto moment = itr[0];
+	   rc->fV.Set(0.0, 0.0, 0.0);
+	   rc->fP.Set(moment[0],moment[1],moment[2]);
+	   rc->fSign = 1;
+	   track[counter] = new TEveTrack(rc, prop);
+	   list->AddElement(track[counter]);
+	   track[counter]->SetLineColor(list->GetLineColor());
+	   track[counter]->MakeTrack();
+	   counter ++;
+	 }
+    
+       cout<<"counter ="<<counter<<endl;
+       gEve->AddElement(list);
+       //gEve->Redraw3D(kTRUE);
+       }
        
        //geometry load
        gGeoManager = gEve->GetGeometry("/sphenix/u/mfujiwara/Documents/inttgeometry.root");
@@ -1410,17 +1588,120 @@ void InttEventDisplay :: DrawHits()
        TEveViewer *ev = gEve->GetDefaultViewer();
        TGLViewer *gv = ev->GetGLViewer();
        gv->SetGuideState(TGLUtil::kAxesOrigin, kTRUE, kFALSE, 0); 
-       gEve->Redraw3D(kTRUE);
+       //gEve->Redraw3D(kTRUE);
 
        //Camera control
+       Double_t camcenter[3]={0.,0.,0.};
        gSystem->ProcessEvents();
        gv->CurrentCamera().RotateRad(0,-3.14/2);
+       gv->SetPerspectiveCamera(TGLViewer::kCameraPerspXOZ,2,30,&camcenter[0],0,0);
+       //TGLPerspectiveCamera& gpc =(TGLPerspectiveCamera&) gv->CurrentCamera();
+       //gpc.Zoom(10,kTRUE,kTRUE);
 
        gv->RequestDraw();
-    }
-    cout<<"npoints = " <<npoints<<endl;
+       gEve->Redraw3D(kFALSE,kFALSE);
+       cout<<"number of hit points = " <<npoints<<endl;
     //return ps;
 }
+
+void InttEventDisplay::Draw_rhoz_display(){
+  TEveManager::Terminate();
+  TEveManager::Create();
+  
+  InttEventDisplay::drawhits();
+  gEve->AddElement(m_ps);
+  InttEventDisplay::DrawTracks();
+  gEve->AddElement(m_list);
+
+  //geometry load
+  gGeoManager = gEve->GetGeometry("/sphenix/u/mfujiwara/Documents/inttgeometry.root");
+  TEveGeoTopNode* geom = new TEveGeoTopNode(gGeoManager, gGeoManager->GetTopNode());
+  geom->CanEditMainTransparency();
+  geom->SetMainTransparency(20);
+  gEve->AddGlobalElement(geom);
+
+  // camera
+   TEveScene* s = gEve->SpawnNewScene("Projected Event");
+   gEve->GetDefaultViewer()->AddScene(s);
+   TGLViewer* v = gEve->GetDefaultGLViewer();
+   Double_t camcenter[3]={0.,0.,0.};
+   v->SetOrthoCamera(TGLViewer::kCameraOrthoZOY,5,100,&camcenter[0],0.,0.);
+   v->SetCurrentCamera(TGLViewer::kCameraOrthoZOY);
+   
+   // projections
+   TEveProjectionManager* mng =
+      new TEveProjectionManager(TEveProjection::kPT_RhoZ);
+   s->AddElement(mng);
+   TEveProjectionAxes* axes = new TEveProjectionAxes(mng);
+   axes->SetTitle("TEveProjections demo");
+   s->AddElement(axes);
+   gEve->AddToListTree(axes, kTRUE);
+   gEve->AddToListTree(mng, kTRUE);
+   
+   gEve->Redraw3D(kFALSE,kFALSE);
+   v->RequestDraw();
+   
+   
+}
+
+void InttEventDisplay::DrawTracks(){
+  int numtrack = m_tracks.size();
+       cout<<"number of tracks = " <<numtrack<<endl;
+    
+       m_list = new TEveTrackList();
+       TEveTrackPropagator *prop = m_list->GetPropagator();
+       TEveTrack *track[numtrack];
+       TEveRecTrackD *rc = new TEveRecTrackD();
+       int counter = 0;
+
+       prop->SetMagFieldObj(new TEveMagFieldConst(0., 0., 0.));
+
+       m_list->SetElementName(Form("%s, constB", m_list->GetElementName()));
+       m_list->SetLineColor(kMagenta);
+       for (auto itr = m_tracks.begin(); itr != m_tracks.end();++itr)
+	 {   
+	   auto moment = itr[0];
+	   rc->fV.Set(0.0, 0.0, 0.0);
+	   rc->fP.Set(moment[0],moment[1],moment[2]);
+	   rc->fSign = 1;
+	   track[counter] = new TEveTrack(rc, prop);
+	   m_list->AddElement(track[counter]);
+	   track[counter]->SetLineColor(m_list->GetLineColor());
+	   track[counter]->MakeTrack();
+	   counter ++;
+	 }
+    
+       cout<<"counter ="<<counter<<endl;
+       //gEve->AddElement(list);
+
+       //return list;
+}
+
+void InttEventDisplay::drawhits(){
+int npoints = m_clusters.size();
+    cout<<"npoints = " <<npoints<<endl;
+    m_ps = new TEvePointSet(npoints);
+    m_ps->SetOwnIds(kTRUE);
+
+    //cout<<"new TEvePointSet"<<endl;
+
+    int counter  = 0;
+    for(auto itr = m_clusters.begin(); itr != m_clusters.end();++itr ){
+      auto cluster = itr[0];
+      m_ps->SetNextPoint(cluster[0], cluster[1], cluster[2]);
+      m_ps->SetPointId(new TNamed(Form("Point %d", counter), ""));
+      counter ++ ;
+      //cout<<"itr = "<<*itr<<endl;
+      //cout<<"cluster[0] = "<<cluster[0]<<"   cluster[1] = "<<cluster[1]<<"     cluster[2] = "<<cluster[2]<<endl;
+    }
+ 
+    m_ps->SetMarkerColor(2);
+    m_ps->SetMarkerSize(1.2);
+    m_ps->SetMarkerStyle(4);
+
+    //return ps;
+}
+
 
 
 void InttEventDisplay::drawCanvas()
