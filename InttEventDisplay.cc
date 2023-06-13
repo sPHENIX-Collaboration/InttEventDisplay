@@ -11,8 +11,8 @@
 #include <calotrigger/CaloTriggerInfo.h>
 
 /// Jet includes
-#include <g4jets/Jet.h>
-#include <g4jets/JetMap.h>
+//#include <g4jets/Jet.h>
+//#include <g4jets/JetMap.h>
 
 /// Tracking includes
 #include <globalvertex/GlobalVertex.h>
@@ -22,22 +22,24 @@
 #include <trackbase_historic/SvtxVertex.h>
 #include <trackbase_historic/SvtxVertexMap.h>
 #include <trackbase/TrkrDefs.h>
-#include <trackbase/TrkrClusterv4.h>            
+#include <trackbase/TrkrHitSet.h>
+#include <trackbase/TrkrHitSetContainerv1.h>
+#include <trackbase/TrkrClusterv4.h>
 #include <trackbase/TrkrClusterContainerv3.h>
 #include <trackbase/ActsTrackingGeometry.h>
 #include <trackbase/ActsGeometry.h>
 #include <trackbase/ActsSurfaceMaps.h>
-#include<Acts/Surfaces/Surface.hpp>
-#include<Acts/Surfaces/CylinderSurface.hpp>
-#include<trackreco/PHActsSiliconSeeding.h>
+#include <Acts/Surfaces/Surface.hpp>
+#include <Acts/Surfaces/CylinderSurface.hpp>
+#include <trackreco/PHActsSiliconSeeding.h>
 
 /// Truth evaluation includes
 #include <g4eval/JetEvalStack.h>
 #include <g4eval/SvtxEvalStack.h>
 
-/// HEPMC truth includes
+/// HEPMC truth includeshitsetkey
 #pragma GCC diagnostic push
-#pragma GCC diagnostic ignored"-Wdeprecated-declarations"
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 #include <HepMC/GenEvent.h>
 #include <HepMC/GenVertex.h>
 #pragma GCC diagnostic pop
@@ -49,6 +51,7 @@
 #include <fun4all/Fun4AllHistoManager.h>
 #include <fun4all/Fun4AllReturnCodes.h>
 #include <g4main/PHG4Hit.h>
+#include <g4main/PHG4HitContainer.h>
 #include <g4main/PHG4Particle.h>
 #include <g4main/PHG4TruthInfoContainer.h>
 #include <phool/PHCompositeNode.h>
@@ -95,33 +98,29 @@
 #include <TEveTrackPropagator.h>
 #include <TGLOrthoCamera.h>
 #include <fun4all/Fun4AllDstOutputManager.h>
+#include <phfield/PHField.h>
+#include <phfield/PHField3DCartesian.h>
+#include <phfield/PHFieldConfigv1.h>
+#include <phfield/PHFieldUtility.h>
+#include <phool/PHIODataNode.h>
 //////////////
-
 
 using namespace std;
 
 /**
- * This class demonstrates the construction and use of an analysis module 
- * within the sPHENIX Fun4All framework. It is intended to show how to 
+ * This class demonstrates the construction and use of an analysis module
+ * within the sPHENIX Fun4All framework. It is intended to show how to
  * obtain physics objects from the analysis tree, and then write them out
- * to a ROOT tree and file for further offline analysis.  
+ * to a ROOT tree and file for further offline analysis.
  */
 
 /**
  * Constructor of module
  */
 InttEventDisplay::InttEventDisplay(const std::string &name, const std::string &filename)
-  : SubsysReco(name)
-  , m_outfilename(filename)
-  , m_hm(nullptr)
-  , m_minjetpt(5.0)
-  , m_mincluspt(0.25)
-  , m_analyzeTracks(true)
-  , m_analyzeClusters(true)
-  , m_analyzeJets(true)
-  , m_analyzeTruth(false)
+    : SubsysReco(name), m_outfilename(filename), m_hm(nullptr), m_minjetpt(5.0), m_mincluspt(0.25), m_analyzeTracks(true), m_analyzeClusters(true), m_analyzeJets(true), m_analyzeTruth(false)
 {
-  /// Initialize variables and trees so we don't accidentally access 
+  /// Initialize variables and trees so we don't accidentally access
   /// memory that was never allocated
   initializeVariables();
   initializeTrees();
@@ -142,58 +141,45 @@ InttEventDisplay::~InttEventDisplay()
   delete m_tracktree;
 
   ///
-  if(m_c1!=NULL) delete m_c1;
+  if (m_c1 != NULL)
+    delete m_c1;
 }
 
 /**
  * Initialize the module and prepare looping over events
  */
-int InttEventDisplay::Init(PHCompositeNode */*topNode*/)
+int InttEventDisplay::Init(PHCompositeNode * /*topNode*/)
 {
   if (Verbosity() > 5)
   {
     cout << "Beginning Init in InttEventDisplay" << endl;
   }
- 
+
   m_outfile = new TFile(m_outfilename.c_str(), "RECREATE");
 
   m_phi_h = new TH1D("phi_h", ";Counts;#phi [rad]", 50, -6, 6);
   m_eta_phi_h = new TH2F("phi_eta_h", ";#eta;#phi [rad]", 10, -1, 1, 50, -6, 6);
 
-  //cout<<"print print print"<<endl;
-  //topNode->print();
-  //cout<<"pripripirpint"<<endl;
-  cout<<"finish intteventdisplay init"<<endl;
   return 0;
 }
 
 /**
- * Main workhorse function where each event is looped over and 
+ * Main workhorse function where each event is looped over and
  * data from each event is collected from the node tree for analysis
  */
 int InttEventDisplay::process_event(PHCompositeNode *topNode)
 {
 
-  cout << "process_event : start"<<endl<<endl<<endl<<endl<<endl;
-  cout << "process_event : start"<<endl<<endl<<endl<<endl<<endl;
-  cout << "process_event : start"<<endl<<endl<<endl<<endl<<endl;
-  cout << "process_event : start"<<endl<<endl<<endl<<endl<<endl;
-  cout << "process_event : start"<<endl<<endl<<endl<<endl<<endl;
-  PHG4CylinderGeomContainer* geom_container = findNode::getClass<PHG4CylinderGeomContainer>(topNode, "CYLINDERGEOM_INTT");
+  cout << "process_event : start" << endl<< endl<< endl<< endl<< endl;
+  cout << "process_event : start" << endl<< endl<< endl<< endl<< endl;
+  cout << "process_event : start" << endl<< endl<< endl<< endl<< endl;
+  cout << "process_event : start" << endl<< endl<< endl<< endl<< endl;
+  cout << "process_event : start" << endl<< endl<< endl<< endl<< endl;
+  PHG4CylinderGeomContainer *geom_container = findNode::getClass<PHG4CylinderGeomContainer>(topNode, "CYLINDERGEOM_INTT");
 
-  CylinderGeomIntt* geom = dynamic_cast<CylinderGeomIntt*>(geom_container->GetLayerGeom(3));
-  if (geom==NULL) cout<<"No CylinderGeomIntt"<<endl<<endl<<endl<<endl;
-  float pitch = geom->get_strip_y_spacing();
-  float length = geom->get_strip_z_spacing();
-  float radius = geom->get_radius();
-  //int layer = geom->get_layer();
-  // float tilt = geom->get_strip_tilt();
-
-  cout<<"pitch : "<<pitch<<"   length:"<<length<<"    radius:"<<radius<<endl;
-  // cout<<"layer : "<<layer<<endl;
-  //cout<<"strip : "<<strip<<endl;
-
-
+  CylinderGeomIntt *geom = dynamic_cast<CylinderGeomIntt *>(geom_container->GetLayerGeom(3));
+  if (geom == NULL)
+    cout << "No CylinderGeomIntt" << endl<< endl<< endl<< endl;
   if (Verbosity() > 5)
   {
     cout << "Beginning process_event in AnaTutorial" << endl;
@@ -202,18 +188,15 @@ int InttEventDisplay::process_event(PHCompositeNode *topNode)
   if (m_analyzeTruth && 0)
   {
     getHEPMCTruth(topNode);
-    cout<<"getHEPMCTruth"<<endl;
     getPHG4Truth(topNode);
-    cout<<"getPHG4Truth"<<endl;
   }
 
   /// Get the tracks
   if (m_analyzeTracks && 0)
   {
     getTracks(topNode);
-    cout<<"gettracks"<<endl;
-    
   }
+
   /// Get the truth and reconstructed jets  if (m_analyzeJets)
   /*
   i(0){
@@ -224,38 +207,76 @@ int InttEventDisplay::process_event(PHCompositeNode *topNode)
   }
   */
 
-  //Get some Nodes. INTT geometry + hit container
-  cout<<"bofore getnode"<<endl;
+  // Get some Nodes. INTT geometry + hit container
   getNode(topNode);
-  cout<<"getnode"<<endl;
 
-  //std::vector<Acts::Vector3> 
-  m_clusters = writeInttClusters(topNode);
-  cout<<"number of clusters is "<<m_clusters.size()<<endl<<endl<<endl<<endl;
-  m_tracks = writeInttTracks(topNode);
-  cout<<"number of tracks is "<<m_tracks.size()<<endl<<endl<<endl<<endl;
-
-  for(auto itr = m_tracks.begin(); itr != m_tracks.end();++itr ){
-    auto track = itr[0];
-    cout <<"--------------"<<endl;	     
-    cout <<"itr = "  <<*itr << endl;
-    cout<<"px="<<track[0]<<"   py="<<track[1]<<"   pz="<<track[2]<<endl;
-    cout <<"--------------"<<endl<<endl<<endl<<endl<<endl;
+  if(Tracking == true)
+    {
+      m_clusters = writeInttClusters(topNode);
+      cout << "number of clusters is " << m_clusters.size() << endl<< endl<< endl<< endl;
+      m_tracks = writeInttTracks(topNode);
+      cout << "number of tracks is " << m_tracks.size() << endl<< endl<< endl<< endl;
+      m_vertexs = writeInttVertexs(topNode);
+      cout << "number of vertexs is "<< m_vertexs.size()<<endl;
+      
+    }
+  else if(Tracking == false){
+  
+    m_hits = writeInttHits(topNode);
+    cout << "number of hits is "<< m_hits.size()<<endl;
+    
   }
 
-  
+  //m_bfield=writeMagnetField(topNode);
+  //cout<<"bfield (x,y,z)= ("<<m_bfield[0]<<","<<m_bfield[1]<<","<<m_bfield[2]<<")"<<endl;
+
+  // cout tracks
+  /*
+  for (auto itr = m_tracks.begin(); itr != m_tracks.end(); ++itr)
+  {
+    auto track = itr[0];
+    cout << "--------------" << endl;
+    // cout <<"itr = "  <<*itr << endl;
+    cout << "px=" << track[0] << "   py=" << track[1] << "   pz=" << track[2] << endl;
+    cout << "--------------" << endl<< endl<< endl<< endl<< endl;
+  }
+  */
+
+  //cout hit positions
   /*
   for(auto itr = m_clusters.begin(); itr != m_clusters.end();++itr ){
     auto cluster = itr[0];
-    cout <<"--------------"<<endl;	     
+    cout <<"--------------"<<endl;
     cout <<"itr = "  <<*itr << endl;
     cout<<"cluster[0]="<<cluster[0]<<"   cluster[1]="<<cluster[1]<<"   cluster[2]="<<cluster[2]<<endl;
     //cout <<"--------------"<<endl<<endl<<endl<<endl<<endl;
   }
   */
-  
 
-  cout<<"number of points is "<<m_clusters.size()<<endl<<endl<<endl<<endl;
+  //cout << "number of points is " << m_clusters.size() << endl<< endl<< endl<< endl;
+
+  /*
+  PHG4HitContainer *g4hit = findNode::getClass<PHG4HitContainer>(topNode, "G4HIT_INTT");
+  if (!g4hit)
+  {
+    std::cout << "Could not locate g4 hit node G4HIT_INTT " << std::endl;
+    exit(1);
+  }
+  PHG4HitContainer::ConstRange hit_begin_end = g4hit->getHits();
+  for (PHG4HitContainer::ConstIterator hiter = hit_begin_end.first; hiter != hit_begin_end.second; ++hiter)
+  {
+    Acts::Vector3 glob;
+    std::cout << "x: " << hiter->second->get_avg_x() << std::endl;
+    glob(0)=hiter->second->get_avg_x();
+    std::cout << "y: " << hiter->second->get_avg_y() << std::endl;
+    glob(1)=hiter->second->get_avg_y();
+    std::cout << "z: " << hiter->second->get_avg_z() << std::endl;
+    glob(2)=hiter->second->get_avg_z();
+    m_hits.push_back(glob);
+  }
+  std::cout << "InttG4HitRead::process_event(PHCompositeNode *topNode) Processing Event" << std::endl;
+  */
+
   return Fun4AllReturnCodes::EVENT_OK;
 }
 
@@ -263,13 +284,13 @@ int InttEventDisplay::process_event(PHCompositeNode *topNode)
  * End the module and finish any data collection. Clean up any remaining
  * loose ends
  */
-int InttEventDisplay::End(PHCompositeNode */*topNode*/)
+int InttEventDisplay::End(PHCompositeNode * /*topNode*/)
 {
   if (Verbosity() > 1)
   {
     cout << "Ending AnaTutorial analysis package" << endl;
   }
-  
+
   /// Change to the outfile
   m_outfile->cd();
 
@@ -300,7 +321,7 @@ int InttEventDisplay::End(PHCompositeNode */*topNode*/)
   /// Write out any other histograms
   m_phi_h->Write();
   m_eta_phi_h->Write();
-  
+
   /// Write and close the outfile
   m_outfile->Write();
   m_outfile->Close();
@@ -313,11 +334,12 @@ int InttEventDisplay::End(PHCompositeNode */*topNode*/)
     cout << "Finished AnaTutorial analysis package" << endl;
   }
 
-  return 0;}
+  return 0;
+}
 
 /**
  * This method gets all of the HEPMC truth particles from the node tree
- * and stores them in a ROOT TTree. The HEPMC truth particles are what, 
+ * and stores them in a ROOT TTree. The HEPMC truth particles are what,
  * for example, directly comes out of PYTHIA and thus gives you all of
  * the associated parton information
  */
@@ -460,7 +482,7 @@ void InttEventDisplay::getPHG4Truth(PHCompositeNode *topNode)
 /**
  * This method gets the tracks as reconstructed from the tracker. It also
  * compares the reconstructed track to its truth track counterpart as determined
- * by the 
+ * by the
  */
 void InttEventDisplay::getTracks(PHCompositeNode *topNode)
 {
@@ -476,12 +498,12 @@ void InttEventDisplay::getTracks(PHCompositeNode *topNode)
   }
 
   /// EvalStack for truth track matching
-  if(!m_svtxEvalStack)
-    {
-      m_svtxEvalStack = new SvtxEvalStack(topNode);
-      m_svtxEvalStack->set_verbosity(Verbosity());
-    }
-  
+  if (!m_svtxEvalStack)
+  {
+    m_svtxEvalStack = new SvtxEvalStack(topNode);
+    m_svtxEvalStack->set_verbosity(Verbosity());
+  }
+
   m_svtxEvalStack->next_event(topNode);
 
   /// Get the track evaluator
@@ -509,6 +531,7 @@ void InttEventDisplay::getTracks(PHCompositeNode *topNode)
     m_tr_pt = sqrt(m_tr_px * m_tr_px + m_tr_py * m_tr_py);
 
     // Make some cuts on the track to clean up sample
+
     if (m_tr_pt < 0.5)
       continue;
 
@@ -539,15 +562,16 @@ void InttEventDisplay::getTracks(PHCompositeNode *topNode)
     m_truthtracketa = atanh(m_truthtrackpz / m_truthtrackp);
     m_truthtrackpid = truthtrack->get_pid();
 
-    count1 = count1 +1;
+    count1 = count1 + 1;
     m_tracktree->Fill();
   }
-  cout<<"get track loop ="<<count1<<endl;
+  cout << "get track loop =" << count1 << endl;
 }
 
 /**
  * Method that gets the truth jets and stores them in a tree
  */
+/*
 void InttEventDisplay::getTruthJets(PHCompositeNode *topNode)
 {
   if (Verbosity() > 1)
@@ -560,11 +584,11 @@ void InttEventDisplay::getTruthJets(PHCompositeNode *topNode)
 
   /// Get reco jets associated to truth jets to study e.g. jet efficiencies
   JetMap *reco_jets = findNode::getClass<JetMap>(topNode, "AntiKt_Tower_r04");
-  if(!m_jetEvalStack)
-    {
-      m_jetEvalStack = new JetEvalStack(topNode, "AntiKt_Tower_r04",
-					"AntiKt_Truth_r04");
-    }
+  if (!m_jetEvalStack)
+  {
+    m_jetEvalStack = new JetEvalStack(topNode, "AntiKt_Tower_r04",
+                                      "AntiKt_Truth_r04");
+  }
   m_jetEvalStack->next_event(topNode);
   JetTruthEval *trutheval = m_jetEvalStack->get_truth_eval();
 
@@ -588,12 +612,12 @@ void InttEventDisplay::getTruthJets(PHCompositeNode *topNode)
     std::set<PHG4Particle *> truthjetcomp =
         trutheval->all_truth_particles(truthJet);
     int ntruthconstituents = 0;
-    //loop over the constituents of the truth jet
+    // loop over the constituents of the truth jet
     for (std::set<PHG4Particle *>::iterator iter2 = truthjetcomp.begin();
          iter2 != truthjetcomp.end();
          ++iter2)
     {
-      //get the particle of the truthjet
+      // get the particle of the truthjet
       PHG4Particle *truthpart = *iter2;
       if (!truthpart)
       {
@@ -604,7 +628,7 @@ void InttEventDisplay::getTruthJets(PHCompositeNode *topNode)
       ntruthconstituents++;
     }
 
-    if(ntruthconstituents < 3)
+    if (ntruthconstituents < 3)
       continue;
     /// Only collect truthjets above the _minjetpt cut
     if (m_truthjetpt < m_minjetpt)
@@ -630,58 +654,57 @@ void InttEventDisplay::getTruthJets(PHCompositeNode *topNode)
     float closestjet = 9999;
     /// Iterate over the reconstructed jets
     for (JetMap::Iter recoIter = reco_jets->begin();
-	 recoIter != reco_jets->end();
-	 ++recoIter)
-      {
-	const Jet *recoJet = recoIter->second;
-	m_recojetpt = recoJet->get_pt();
-	if (m_recojetpt < m_minjetpt-m_minjetpt*0.4)
-	  continue;
-		
-	m_recojeteta = recoJet->get_eta();
-	m_recojetphi = recoJet->get_phi();
+         recoIter != reco_jets->end();
+         ++recoIter)
+    {
+      const Jet *recoJet = recoIter->second;
+      m_recojetpt = recoJet->get_pt();
+      if (m_recojetpt < m_minjetpt - m_minjetpt * 0.4)
+        continue;
 
-	if (Verbosity() > 1)
-	  {
-	    cout << "matching by distance jet" << endl;
-	  }
-	
-        float dphi = m_recojetphi - m_truthjetphi;
-        if (dphi > TMath::Pi())
-          dphi -= TMath::Pi() * 2.;
-        if (dphi < -1 * TMath::Pi())
-          dphi += TMath::Pi() * 2.;
-	
-        float deta = m_recojeteta - m_truthjeteta;
-        /// Determine the distance in eta phi space between the reconstructed
-        /// and truth jets
-        m_dR = sqrt(pow(dphi, 2.) + pow(deta, 2.));
-	
-        /// If this truth jet is closer than the previous truth jet, it is
-        /// closer and thus should be considered the truth jet
-        if (m_dR < truth_jets->get_par() && m_dR < closestjet)
-	  {
-	    // Get reco jet characteristics
-	    m_recojetid = recoJet->get_id();
-	    m_recojetpx = recoJet->get_px();
-	    m_recojetpy = recoJet->get_py();
-	    m_recojetpz = recoJet->get_pz();
-	    m_recojetphi = recoJet->get_phi();
-	    m_recojetp = recoJet->get_p();
-	    m_recojetenergy = recoJet->get_e();
-	    
-	  }
+      m_recojeteta = recoJet->get_eta();
+      m_recojetphi = recoJet->get_phi();
+
+      if (Verbosity() > 1)
+      {
+        cout << "matching by distance jet" << endl;
       }
-	
+
+      float dphi = m_recojetphi - m_truthjetphi;
+      if (dphi > TMath::Pi())
+        dphi -= TMath::Pi() * 2.;
+      if (dphi < -1 * TMath::Pi())
+        dphi += TMath::Pi() * 2.;
+
+      float deta = m_recojeteta - m_truthjeteta;
+      /// Determine the distance in eta phi space between the reconstructed
+      /// and truth jets
+      m_dR = sqrt(pow(dphi, 2.) + pow(deta, 2.));
+
+      /// If this truth jet is closer than the previous truth jet, it is
+      /// closer and thus should be considered the truth jet
+      if (m_dR < truth_jets->get_par() && m_dR < closestjet)
+      {
+        // Get reco jet characteristics
+        m_recojetid = recoJet->get_id();
+        m_recojetpx = recoJet->get_px();
+        m_recojetpy = recoJet->get_py();
+        m_recojetpz = recoJet->get_pz();
+        m_recojetphi = recoJet->get_phi();
+        m_recojetp = recoJet->get_p();
+        m_recojetenergy = recoJet->get_e();
+      }
+    }
 
     /// Fill the truthjet tree
     m_truthjettree->Fill();
   }
 }
-
+*/
 /**
  * Get the reconstructed jets and store them in a tree
  */
+/*
 void InttEventDisplay::getReconstructedJets(PHCompositeNode *topNode)
 {
   /// Get the reconstructed tower jets
@@ -689,11 +712,11 @@ void InttEventDisplay::getReconstructedJets(PHCompositeNode *topNode)
   /// Get the truth jets
   JetMap *truth_jets = findNode::getClass<JetMap>(topNode, "AntiKt_Truth_r04");
 
-  if(!m_jetEvalStack)
-    {
-      m_jetEvalStack = new JetEvalStack(topNode, "AntiKt_Tower_r04",
-					"AntiKt_Truth_r04");
-    }
+  if (!m_jetEvalStack)
+  {
+    m_jetEvalStack = new JetEvalStack(topNode, "AntiKt_Tower_r04",
+                                      "AntiKt_Truth_r04");
+  }
   m_jetEvalStack->next_event(topNode);
   JetRecoEval *recoeval = m_jetEvalStack->get_reco_eval();
   if (!reco_jets)
@@ -747,7 +770,8 @@ void InttEventDisplay::getReconstructedJets(PHCompositeNode *topNode)
     m_truthjetpz = 0;
 
     Jet *truthjet = recoeval->max_truth_jet_by_energy(recoJet);
-    if(truthjet){
+    if (truthjet)
+    {
       m_truthjetid = truthjet->get_id();
       m_truthjetp = truthjet->get_p();
       m_truthjetpx = truthjet->get_px();
@@ -756,12 +780,11 @@ void InttEventDisplay::getReconstructedJets(PHCompositeNode *topNode)
       m_truthjeteta = truthjet->get_eta();
       m_truthjetphi = truthjet->get_phi();
       m_truthjetenergy = truthjet->get_e();
-      m_truthjetpt = sqrt(m_truthjetpx * m_truthjetpx 
-			  + m_truthjetpy * m_truthjetpy);
+      m_truthjetpt = sqrt(m_truthjetpx * m_truthjetpx + m_truthjetpy * m_truthjetpy);
     }
 
     /// Check to make sure the truth jet node is available
-    else if(truth_jets)
+    else if (truth_jets)
     {
       /// Match the reconstructed jet to the closest truth jet in delta R space
       /// Iterate over the truth jets
@@ -780,7 +803,7 @@ void InttEventDisplay::getReconstructedJets(PHCompositeNode *topNode)
         float thisjetphi = truthJet->get_phi();
 
         float dphi = m_recojetphi - thisjetphi;
-        if (dphi >TMath::Pi())
+        if (dphi > TMath::Pi())
           dphi -= TMath::Pi() * 2.;
         if (dphi < -1. * TMath::Pi())
           dphi += TMath::Pi() * 2.;
@@ -811,7 +834,7 @@ void InttEventDisplay::getReconstructedJets(PHCompositeNode *topNode)
     m_recojettree->Fill();
   }
 }
-
+*/
 /**
  * This method gets clusters from the EMCal and stores them in a tree. It
  * also demonstrates how to get trigger emulator information. Clusters from
@@ -838,7 +861,7 @@ void InttEventDisplay::getEMCalClusters(PHCompositeNode *topNode)
   if (!vertexmap)
   {
     cout << "AnaTutorial::getEmcalClusters - Fatal Error - GlobalVertexMap node is missing. Please turn on the do_global flag in the main macro in order to reconstruct the global vertex." << endl;
-    assert(vertexmap);  // force quit
+    assert(vertexmap); // force quit
 
     return;
   }
@@ -855,15 +878,15 @@ void InttEventDisplay::getEMCalClusters(PHCompositeNode *topNode)
 
   /// Trigger emulator
   CaloTriggerInfo *trigger = findNode::getClass<CaloTriggerInfo>(topNode, "CaloTriggerInfo");
-  
+
   /// Can obtain some trigger information if desired
-  if(trigger)
-    {
-      m_E_4x4 = trigger->get_best_EMCal_4x4_E();
-    }
+  if (trigger)
+  {
+    m_E_4x4 = trigger->get_best_EMCal_4x4_E();
+  }
   RawClusterContainer::ConstRange begin_end = clusters->getClusters();
   RawClusterContainer::ConstIterator clusIter;
- 
+
   /// Loop over the EMCal clusters
   for (clusIter = begin_end.first;
        clusIter != begin_end.second;
@@ -891,7 +914,7 @@ void InttEventDisplay::getEMCalClusters(PHCompositeNode *topNode)
     m_cluspy = m_cluspt * sin(m_clusphi);
     m_cluspz = sqrt(m_clusenergy * m_clusenergy - m_cluspx * m_cluspx - m_cluspy * m_cluspy);
 
-    //fill the cluster tree with all emcal clusters
+    // fill the cluster tree with all emcal clusters
     m_clustertree->Fill();
   }
 }
@@ -1010,7 +1033,7 @@ void InttEventDisplay::initializeTrees()
 /**
  * This function initializes all of the member variables in this class so that there
  * are no variables that might not be set before e.g. writing them to the output
- * trees. 
+ * trees.
  */
 void InttEventDisplay::initializeVariables()
 {
@@ -1083,7 +1106,7 @@ void InttEventDisplay::initializeVariables()
 
 //////////////////////////
 //
-//    my analysis 
+//    my analysis
 //
 //////////////////////////
 
@@ -1095,8 +1118,8 @@ void InttEventDisplay::getNode(PHCompositeNode *topNode)
   if (!geom_container)
     {
       cout<<PHWHERE
-	  <<"CylinderGeomContainer node is missing."
-	  <<endl;
+    <<"CylinderGeomContainer node is missing."
+    <<endl;
       return;
     }
   else cout<<"PH4CylinderGeomContainer is successfully loaded"<<endl;
@@ -1106,646 +1129,535 @@ void InttEventDisplay::getNode(PHCompositeNode *topNode)
   if (!m_geom)
     {
       cout<<PHWHERE
-	  <<"CylinderGeomIntt node is missing."
-	  <<endl;
+    <<"CylinderGeomIntt node is missing."
+    <<endl;
       return;
     }
   */
 
- 
   m_tGeometry = findNode::getClass<ActsGeometry>(topNode, "ActsGeometry");
-  if(!m_tGeometry)
-    {
-      std::cout << PHWHERE << "No ActsGeometry on node tree. Bailing."
-		<< std::endl;
-      return;
-    }
-  else cout<<"ActGeometry on node tree is successfully loaded"<<endl;
-
-
-  if(m_useTruthClusters){
-    m_clusterMap = findNode::getClass<TrkrClusterContainer>(topNode,
-							    "TRKR_CLUSTER_TRUTH");
-    cout<<"TRKR_CLUSTER_TRUTH"<<endl;
+  if (!m_tGeometry)
+  {
+    std::cout << PHWHERE << "No ActsGeometry on node tree. Bailing."
+              << std::endl;
+    return;
   }
-  else{
+  else
+    cout << "ActGeometry on node tree is successfully loaded" << endl;
+
+  if (m_useTruthClusters)
+  {
     m_clusterMap = findNode::getClass<TrkrClusterContainer>(topNode,
-							     "TRKR_CLUSTER");
-    cout<<"TRKR_CLUSTER"<<endl;
+                                                            "TRKR_CLUSTER_TRUTH");
+    cout << "TRKR_CLUSTER_TRUTH" << endl;
+  }
+  else
+  {
+    m_clusterMap = findNode::getClass<TrkrClusterContainer>(topNode,
+                                                            "TRKR_CLUSTER");
+    cout << "TRKR_CLUSTER" << endl;
   }
 
-  if(!m_clusterMap)
-    {
-      cout<<PHWHERE
-	  <<"TrkrClusterContainer node is missing."
-	  <<endl;
-      //return ABORTEVENT;
-      return;
-    }
-  else cout<<"TrkrClusterContainr is successfully loaded"<<endl;
+  if (!m_clusterMap)
+  {
+    cout << PHWHERE
+         << "TrkrClusterContainer node is missing."
+         << endl;
+    // return ABORTEVENT;
+    return;
+  }
+  else
+    cout << "TrkrClusterContainr is successfully loaded" << endl;
 
   return;
 }
 
-
-std::vector<Acts::Vector3> InttEventDisplay :: writeInttClusters(PHCompositeNode */*topNode*/)
+std::vector<Acts::Vector3>  InttEventDisplay ::writeInttHits(PHCompositeNode * topNode)
 {
-    std::vector<TrkrDefs::cluskey> matchedClusters;
-    std::vector<Acts::Vector3> clusters;
-    for (unsigned int inttlayer = 0; inttlayer < m_nInttLayers; inttlayer++)
+  /* 
+  std::vector<TrkrDefs::hitkey> matchedHits;
+   std::vector<Acts::Vector3> hits;
+  
+  for (unsigned int inttlayer = 0; inttlayer < m_nInttLayers; inttlayer++)
       {
-	for( const auto& hitsetkey : m_clusterMap->getHitSetKeys(TrkrDefs::TrkrId::inttId, inttlayer+3))
-	  {
-	    //cout <<"hitsetkey="<<hitsetkey<<endl;
-	    auto range = m_clusterMap->getClusters(hitsetkey);
-	    
-
-	    for (auto clusIter=range.first; clusIter!= range.second; ++clusIter)
-	      {
-		const auto cluskey = clusIter->first;
-		//cout <<"cluskey="<<cluskey<<endl;
-		const auto cluster = clusIter->second;
-
-		//cout<<"X = "<<cluster->getLocalX()<<", Y = "<<cluster->getLocalY()<<endl;
-
-		const auto globalPos = m_tGeometry->getGlobalPosition(cluskey, cluster);
-		//cout<<"gX = "<<globalPos(0)<<", gY = "<<globalPos(1)<<" , gZ = "<<globalPos(2)<<endl;
-
-		clusters.push_back(globalPos);
-              }
-	  }
-      }
-    
-
-    //get segments locations
-    /*
-    uint8_t type;
-    uint8_t ladder_index_max;
-    int time_bucket = 0; 
-
-    for(uint8_t lyr=3;lyr<7;lyr++){
-      
-      //number of ladders
-      switch(lyr){
-      case 3:
-	ladder_index_max=12;
-	cout<<"ladder_index_max ="<<ladder_index_max<<endl;
-	break;
-      case 4:
-	ladder_index_max=12;
-	cout<<"ladder_index_max ="<<ladder_index_max<<endl;
-	break;
-      case 5:
-	ladder_index_max=16;
-	cout<<"ladder_index_max ="<<ladder_index_max<<endl;
-	break;
-      case 6:
-	ladder_index_max=16;
-	cout<<"ladder_index_max ="<<ladder_index_max<<endl;
-	break;
-      }
-    
-
-      //typeA position
-      type = 0;
-      for(uint8_t ladder_index=0;ladder_index<ladder_index_max;ladder_index++){
-	auto genhitkeyintt = InttDefs::genHitSetKey(lyr,type,ladder_index,time_bucket);
-	auto surfintt = m_tGeometry->maps().getSiliconSurface(genhitkeyintt);
-	double ladderLocation[3] = {0.,0.,0.};
-	m_geom->find_segment_center(surfintt,m_tGeometry,ladderLocation);
-	//cout << "ladderLocationA=(" << ladderLocation[0] << "," << ladderLocation[1] << "," << ladderLocation[2] << ")" << endl;
-
-	ladderALocationX.push_back(ladderLocation[0]);
-	ladderALocationY.push_back(ladderLocation[1]);
-	ladderALocationZ.push_back(ladderLocation[2]);
-	//cout<<"(lyr,ladder_index)=("<<unsigned(lyr)<<","<<unsigned(ladder_index)<<")"<<endl;
-      }
-
-      type = 2;
-      for(uint8_t ladder_index=0;ladder_index<ladder_index_max;ladder_index++){
-	auto genhitkeyintt = InttDefs::genHitSetKey(lyr,type,ladder_index,time_bucket);
-	auto surfintt = m_tGeometry->maps().getSiliconSurface(genhitkeyintt);
-	double ladderLocation[3] = {0.,0.,0.};
-	m_geom->find_segment_center(surfintt,m_tGeometry,ladderLocation);
-	//cout << "ladderLocationA=(" << ladderLocation[0] << "," << ladderLocation[1] << "," << ladderLocation[2] << ")" << endl;
-
-	ladderALocationX.push_back(ladderLocation[0]);
-	ladderALocationY.push_back(ladderLocation[1]);
-	ladderALocationZ.push_back(ladderLocation[2]);
-	//cout<<"(lyr,ladder_index)=("<<unsigned(lyr)<<","<<unsigned(ladder_index)<<")"<<endl;
-      }
-
-      //typeB position
-      type = 1;
-      for(uint8_t ladder_index=0;ladder_index<ladder_index_max;ladder_index++){
-	auto genhitkeyintt = InttDefs::genHitSetKey(lyr,type,ladder_index,time_bucket);
-	auto surfintt = m_tGeometry->maps().getSiliconSurface(genhitkeyintt);
-	double ladderLocation[3] = {0.,0.,0.};
-	m_geom->find_segment_center(surfintt,m_tGeometry,ladderLocation);
-	//cout << "ladderLocationB=(" << ladderLocation[0] << "," << ladderLocation[1] << "," << ladderLocation[2] << ")" << endl;
-
-	ladderBLocationX.push_back(ladderLocation[0]);
-	ladderBLocationY.push_back(ladderLocation[1]);
-	ladderBLocationZ.push_back(ladderLocation[2]);
-	//cout<<"(lyr,ladder_index)=("<<unsigned(lyr)<<","<<unsigned(ladder_index)<<")"<<endl;
-      }
-
-
-      type = 3;
-      for(uint8_t ladder_index=0;ladder_index<ladder_index_max;ladder_index++){
-	auto genhitkeyintt = InttDefs::genHitSetKey(lyr,type,ladder_index,time_bucket);
-	auto surfintt = m_tGeometry->maps().getSiliconSurface(genhitkeyintt);
-	double ladderLocation[3] = {0.,0.,0.};
-	m_geom->find_segment_center(surfintt,m_tGeometry,ladderLocation);
-	//cout << "ladderLocationB=(" << ladderLocation[0] << "," << ladderLocation[1] << "," << ladderLocation[2] << ")" << endl;
-
-	ladderBLocationX.push_back(ladderLocation[0]);
-	ladderBLocationY.push_back(ladderLocation[1]);
-	ladderBLocationZ.push_back(ladderLocation[2]);
-	//cout<<"(lyr,ladder_index)=("<<unsigned(lyr)<<","<<unsigned(ladder_index)<<")"<<endl;
-      }
-      
-    
-
-      }
-    */
-
-      return clusters;
-}
-
-std::vector<Acts::Vector3> InttEventDisplay :: writeInttTracks(PHCompositeNode *topNode){
-  std::vector<Acts::Vector3> tracks;
-    /// SVTX tracks node
-    SvtxTrackMap *trackmap = findNode::getClass<SvtxTrackMap>(topNode, "SvtxTrackMap");
-
-    /*
-    if (!trackmap)
+  for(const auto& hitkey : m_hitMap->getHitSets(TrkrDefs::TrkrId::inttId, inttlayer+3))
     {
-        cout << PHWHERE
-             << "SvtxTrackMap node is missing, can't collect tracks"
-             << endl;
-    }
-    */
+      //cout <<"hitsetkey="<<hitsetkey<<endl;
+      auto range = m_hitMap->getHits(hitkey);
 
-   /// EvalStack for truth track matching
-    if (!m_svtxEvalStack)
+      for (auto hitIter=range.first; hitIter!= range.second; ++hitIter)
+        {
+    const auto hitskey = hitIter->first;
+    cout <<"hitkey="<<hitskey<<endl;
+    const auto hit = hitIter->second;
+
+    //cout<<"X = "<<hit->getLocalX()<<", Y = "<<hit->getLocalY()<<endl;
+
+    //const auto globalPos = m_tGeometry->getGlobalPosition(cluskey, cluster);
+    //cout<<"gX = "<<globalPos(0)<<", gY = "<<globalPos(1)<<" , gZ = "<<globalPos(2)<<endl;
+
+    //clusters.push_back(globalPos);
+	}
+    }
+      }
+
+  */
+
+  /*
+  m_hitMap = findNode::getClass<TrkrHitSetContainer>(topNode, "TRKR_HITSET");
+  auto range = m_hitMap->getHitSets(TrkrDefs::TrkrId::inttId);
+  //auto hits = m_hitMap->getHits();
+
+
+  for (auto hitIter=range.first; hitIter!= range.second; ++hitIter)
     {
-        m_svtxEvalStack = new SvtxEvalStack(topNode);
-        m_svtxEvalStack->set_verbosity(Verbosity());
+      const auto hitkey = hitIter->first;
+      cout <<"hitkey="<<hitkey<<endl;
+      auto hit = getHit(hitkey);
+
+      const auto m_hits = hitIter->second;
+
+      for(auto itr = m_hits.begin(); itr != m_hits.end();++itr ){
+  auto hits = itr[0];
+  cout <<"--------------"<<endl;
+  cout<<"x="<<hits[0]<<"   y="<<hits[1]<<"   z="<<hits[2]<<endl;
+  cout <<"--------------"<<endl<<endl<<endl<<endl<<endl;
+      }
+
+      //const auto globalPos = m_tGeometry->getGlobalPosition(cluskey, cluster);
+      //cout<<"gX = "<<globalPos(0)<<", gY = "<<globalPos(1)<<" , gZ = "<<globalPos(2)<<endl;
+
+      //clusters.push_back(globalPos);
     }
+  */
+  /*
+  for(auto itr = m_hits.begin(); itr != m_hits.end();++itr ){
+    auto hits = itr[0];
+    cout <<"--------------"<<endl;
+    //cout <<"itr = "  <<*itr << endl;
+    cout<<"x="<<hits[0]<<"   y="<<hits[1]<<"   z="<<hits[2]<<endl;
+    cout <<"--------------"<<endl<<endl<<endl<<endl<<endl;
+  }
+  */
+  // return m_hits;
 
-    m_svtxEvalStack->next_event(topNode);
-
-    /// Get the track evaluator
-    // SvtxTrackEval *trackeval = m_svtxEvalStack->get_track_eval();
-
-    /// Get the range for primary tracks
-    // PHG4TruthInfoContainer *truthinfo = findNode::getClass<PHG4TruthInfoContainer>(topNode, "G4TruthInfo");
-
+  std::vector<Acts::Vector3> hits;
+   PHG4HitContainer *g4hit = findNode::getClass<PHG4HitContainer>(topNode, "G4HIT_INTT");
+  if (!g4hit)
+  {
+    std::cout << "Could not locate g4 hit node G4HIT_INTT " << std::endl;
+    exit(1);
+  }
+  PHG4HitContainer::ConstRange hit_begin_end = g4hit->getHits();
+  for (PHG4HitContainer::ConstIterator hiter = hit_begin_end.first; hiter != hit_begin_end.second; ++hiter)
+  {
     Acts::Vector3 glob;
-    if (Verbosity() > 1)
-    {
-        cout << "Get the SVTX tracks" << endl;
-    }
-    for (unsigned int inttlayer = 0; inttlayer < m_nInttLayers; inttlayer++)
-    {
-      //for (const auto &hitsetkey : m_clusterMap->getHitSetKeys(TrkrDefs::TrkrId::inttId, inttlayer + 3)){
-            // cout <<"hitsetkey="<<hitsetkey<<endl;
-            //auto range = m_clusterMap->getClusters(hitsetkey);
+    std::cout << "x: " << hiter->second->get_avg_x() << std::endl;
+    glob(0)=hiter->second->get_avg_x();
+    std::cout << "y: " << hiter->second->get_avg_y() << std::endl;
+    glob(1)=hiter->second->get_avg_y();
+    std::cout << "z: " << hiter->second->get_avg_z() << std::endl;
+    glob(2)=hiter->second->get_avg_z();
+    hits.push_back(glob);
+  }
+  std::cout << "InttG4HitRead::process_event(PHCompositeNode *topNode) Processing Event" << std::endl;
 
-            //for (auto clusIter = range.first; clusIter != range.second; ++clusIter){
-                for (SvtxTrackMap::Iter iter = trackmap->begin();iter != trackmap->end();++iter)
-                {
-                    SvtxTrack *track = iter->second;
-
-                    /// Get the reconstructed track info
-                    m_tr_px = track->get_px();
-                    glob(0) = m_tr_px;
-                    m_tr_py = track->get_py();
-                    glob(1) = m_tr_py;
-                    m_tr_pz = track->get_pz();
-                    glob(2) = m_tr_pz;
-                    tracks.push_back(glob);
-                }
-		//}
-    
-    }
-    Tracking = true;
-    return tracks;
-    }
-
-void InttEventDisplay :: make_ladderlocationfile(){
-  TFile * location = TFile::Open("/sphenix/u/mfujiwara/Documents/segmentlocation.root","RECREATE");
-
-  location->WriteObject(&ladderALocationX,"segmentALocationX");
-  location->WriteObject(&ladderALocationY,"segmentALocationY");
-  location->WriteObject(&ladderALocationZ,"segmentALocationZ");
-
-  location->WriteObject(&ladderBLocationX,"segmentBLocationX");
-  location->WriteObject(&ladderBLocationY,"segmentBLocationY");
-  location->WriteObject(&ladderBLocationZ,"segmentBLocationZ");
-
-  location->Close();
-
-  cout<<"finish process"<<endl;
+  return hits;
 }
 
-void InttEventDisplay :: DrawHit_rphi(){
-  //TFile::SetCacheFileDir(".");
-  TEveManager::Terminate();
-   TEveManager::Create();
-
-   //open geom file
-   gGeoManager = gEve->GetGeometry("/sphenix/u/mfujiwara/Documents/inttgeometry_rphi.root");
-   TEveGeoTopNode *geom = new TEveGeoTopNode(gGeoManager, gGeoManager->GetTopNode());
-   gEve->AddGlobalElement(geom);
-
-   /*
-   // camera
-   TEveScene* s = gEve->SpawnNewScene("Projected Event");
-   gEve->GetDefaultViewer()->AddScene(s);
-   TGLViewer* v = gEve->GetDefaultGLViewer();
-   v->SetCurrentCamera(TGLViewer::kCameraOrthoXOY);
-   Double_t camcenter[3]={0.,0.,0.};
-   v->SetOrthoCamera(TGLViewer::kCameraOrthoXOY,15,50,&camcenter[0],0.,0.);
-   v->RequestDraw();
-   //TGLOrthoCamera& cam = (TGLOrthoCamera&) v->CurrentCamera();
-   //cam.SetZoomMinMax(5.0,10.);
-   
-   // projections
-   TEveProjectionManager* mng =
-      new TEveProjectionManager(TEveProjection::kPT_RPhi);
-   s->AddElement(mng);
-   TEveProjectionAxes* axes = new TEveProjectionAxes(mng);
-   axes->SetTitle("TEveProjections demo");
-   s->AddElement(axes);
-   gEve->AddToListTree(axes, kTRUE);
-   gEve->AddToListTree(mng, kTRUE);
-   */
-
-   //hit point
-   int npoints = m_clusters.size();
-    cout<<"npoints = " <<npoints<<endl;
-    TEvePointSet* ps = new TEvePointSet(npoints);
-    ps->SetOwnIds(kTRUE);
-
-    cout<<"new TEvePointSet"<<endl;
-
-    int counter  = 0;
-    for(auto itr = m_clusters.begin(); itr != m_clusters.end();++itr ){
-      auto cluster = itr[0];
-      ps->SetNextPoint(cluster[0], cluster[1], cluster[2]);
-      ps->SetPointId(new TNamed(Form("Point %d", counter), ""));
-      counter ++ ;
-      //cout<<"itr = "<<*itr<<endl;
-      //cout<<"cluster[0] = "<<cluster[0]<<"   cluster[1] = "<<cluster[1]<<"     cluster[2] = "<<cluster[2]<<endl;
-    }
- 
-    ps->SetMarkerColor(2);
-    ps->SetMarkerSize(1.2);
-    ps->SetMarkerStyle(4);
-    gEve->AddElement(ps);
-
-    geom->CanEditMainColor();
-
-    //gEve->Redraw3D(kTRUE);
-
-    if(Tracking == true){
-    //set Magfield and draw Tracks
-    int numtrack = m_tracks.size();
-    cout<<"number of tracks = " <<numtrack<<endl;
-    
-    TEveTrackList *list = new TEveTrackList();
-    TEveTrackPropagator *prop = list->GetPropagator();
-    TEveTrack *track[numtrack];
-    TEveRecTrackD *rc = new TEveRecTrackD();
-    counter = 0;
-
-    prop->SetMagFieldObj(new TEveMagFieldConst(0., 0., 0.));
-
-    list->SetElementName(Form("%s, constB", list->GetElementName()));
-    list->SetLineColor(kMagenta);
-    for (auto itr = m_tracks.begin(); itr != m_tracks.end();++itr)
-    {   
-        auto moment = itr[0];
-        rc->fV.Set(0.0, 0.0, 0.0);
-        rc->fP.Set(moment[0],moment[1],moment[2]);
-        rc->fSign = 1;
-        track[counter] = new TEveTrack(rc, prop);
-	list->AddElement(track[counter]);
-	track[counter]->SetLineColor(list->GetLineColor());
-	track[counter]->MakeTrack();
-        counter ++;
-    }
-    
-    gEve->AddElement(list);
-    //gEve->Redraw3D(kTRUE);
-    //v->RequestDraw();
-
-    cout<<"number of hit points = " <<npoints<<endl;
-    cout<<"number of tracks ="<<numtrack<<endl;
-    }
-
-    // camera
-   TEveScene* s = gEve->SpawnNewScene("Projected Event");
-   gEve->GetDefaultViewer()->AddScene(s);
-   TGLViewer* v = gEve->GetDefaultGLViewer();
-   //v->SetCurrentCamera(TGLViewer::kCameraOrthoXOY);
-   Double_t camcenter[3]={0.,0.,0.};
-   v->SetOrthoCamera(TGLViewer::kCameraOrthoXOY,5,100,&camcenter[0],0.,0.);
-   //v->RequestDraw();
-   v->SetCurrentCamera(TGLViewer::kCameraOrthoXOY);
-   //TGLOrthoCamera& cam = (TGLOrthoCamera&) v->CurrentCamera();
-   //cam.SetZoomMinMax(5.0,10.);
-   
-   // projections
-   TEveProjectionManager* mng =
-      new TEveProjectionManager(TEveProjection::kPT_RPhi);
-   //mng->SetCenter(0,0,0);
-   s->AddElement(mng);
-   TEveProjectionAxes* axes = new TEveProjectionAxes(mng);
-   axes->SetTitle("TEveProjections demo");
-   s->AddElement(axes);
-   gEve->AddToListTree(axes, kTRUE);
-   gEve->AddToListTree(mng, kTRUE);
-   
-   gEve->Redraw3D(kFALSE,kFALSE);
-   v->RequestDraw();  
-}
-
-void InttEventDisplay :: DrawHits()
+std::vector<Acts::Vector3> InttEventDisplay ::writeInttClusters(PHCompositeNode * /*topNode*/)
 {
-  TEveManager::Terminate();
-    TEveManager::Create();
-
-    //cout<<"TEve created"<<endl;
-
-    int npoints = m_clusters.size();
-    cout<<"npoints = " <<npoints<<endl;
-    TEvePointSet* ps = new TEvePointSet(npoints);
-    ps->SetOwnIds(kTRUE);
-
-    //cout<<"new TEvePointSet"<<endl;
-
-    int counter  = 0;
-    for(auto itr = m_clusters.begin(); itr != m_clusters.end();++itr ){
-      auto cluster = itr[0];
-      ps->SetNextPoint(cluster[0], cluster[1], cluster[2]);
-      ps->SetPointId(new TNamed(Form("Point %d", counter), ""));
-      counter ++ ;
-      //cout<<"itr = "<<*itr<<endl;
-      //cout<<"cluster[0] = "<<cluster[0]<<"   cluster[1] = "<<cluster[1]<<"     cluster[2] = "<<cluster[2]<<endl;
-    }
- 
-    ps->SetMarkerColor(2);
-    ps->SetMarkerSize(1.2);
-    ps->SetMarkerStyle(4);
-
-    //typeA center location
-    int Apoints = ladderALocationX.size();
-    //cout <<"Apoints ="<< Apoints <<endl;
-    TEvePointSet* ps2 = new TEvePointSet(Apoints);
-    ps2->SetOwnIds(kTRUE);
-
-    for(int i=0;i<Apoints;i++){
-      ps2->SetNextPoint(ladderALocationX[i],ladderALocationY[i],ladderALocationZ[i]);
-      ps2->SetPointId(new TNamed(Form("Point %d", i), ""));
-    }
-    
-    ps2->SetMarkerColor(3);
-    ps2->SetMarkerSize(1.0);
-    ps2->SetMarkerStyle(4);
- 
-    //typeB center location
-    int Bpoints = ladderBLocationX.size();
-    //cout <<"Bpoints ="<< Bpoints <<endl;
-    TEvePointSet* ps3 = new TEvePointSet(Bpoints);
-    ps3->SetOwnIds(kTRUE);
-
-    for(int i=0;i<Bpoints;i++){
-      ps3->SetNextPoint(ladderBLocationX[i],ladderBLocationY[i],ladderBLocationZ[i]);
-      ps3->SetPointId(new TNamed(Form("Point %d", i), ""));
-    }
-    
-    ps3->SetMarkerColor(5);
-    ps3->SetMarkerSize(1.0);
-    ps3->SetMarkerStyle(4);
-
-    /*
-    if (parent)
+  std::vector<TrkrDefs::cluskey> matchedClusters;
+  std::vector<Acts::Vector3> clusters;
+  for (unsigned int inttlayer = 0; inttlayer < m_nInttLayers; inttlayer++)
+  {
+    for (const auto &hitsetkey : m_clusterMap->getHitSetKeys(TrkrDefs::TrkrId::inttId, inttlayer + 3))
     {
-       parent->AddElement(ps);
+      auto range = m_clusterMap->getClusters(hitsetkey);
+
+      for (auto clusIter = range.first; clusIter != range.second; ++clusIter)
+      {
+        const auto cluskey = clusIter->first;
+        const auto cluster = clusIter->second;
+        const auto globalPos = m_tGeometry->getGlobalPosition(cluskey, cluster);
+        clusters.push_back(globalPos);
+      }
     }
-    */
-    //.X else
-    
-       gEve->AddElement(ps);
-       //gEve->AddElement(ps2);
-       // gEve->AddElement(ps3);
+  }
 
-       //set Magfield and draw Tracks
-       if(Tracking == true){
-       int numtrack = m_tracks.size();
-       cout<<"number of tracks = " <<numtrack<<endl;
-    
-       TEveTrackList *list = new TEveTrackList();
-       TEveTrackPropagator *prop = list->GetPropagator();
-       TEveTrack *track[numtrack];
-       TEveRecTrackD *rc = new TEveRecTrackD();
-       counter = 0;
-
-       prop->SetMagFieldObj(new TEveMagFieldConst(0., 0., 0.));
-
-       list->SetElementName(Form("%s, constB", list->GetElementName()));
-       list->SetLineColor(kMagenta);
-       for (auto itr = m_tracks.begin(); itr != m_tracks.end();++itr)
-	 {   
-	   auto moment = itr[0];
-	   rc->fV.Set(0.0, 0.0, 0.0);
-	   rc->fP.Set(moment[0],moment[1],moment[2]);
-	   rc->fSign = 1;
-	   track[counter] = new TEveTrack(rc, prop);
-	   list->AddElement(track[counter]);
-	   track[counter]->SetLineColor(list->GetLineColor());
-	   track[counter]->MakeTrack();
-	   counter ++;
-	 }
-    
-       cout<<"counter ="<<counter<<endl;
-       gEve->AddElement(list);
-       //gEve->Redraw3D(kTRUE);
-       }
-       
-       //geometry load
-       gGeoManager = gEve->GetGeometry("/sphenix/u/mfujiwara/Documents/inttgeometry.root");
-       TEveGeoTopNode* geom = new TEveGeoTopNode(gGeoManager, gGeoManager->GetTopNode());
-       geom->CanEditMainTransparency();
-       geom->SetMainTransparency(50);
-       gEve->AddGlobalElement(geom);
-       
-
-       //x,y,z axis show
-       TEveViewer *ev = gEve->GetDefaultViewer();
-       TGLViewer *gv = ev->GetGLViewer();
-       gv->SetGuideState(TGLUtil::kAxesOrigin, kTRUE, kFALSE, 0); 
-       //gEve->Redraw3D(kTRUE);
-
-       //Camera control
-       Double_t camcenter[3]={0.,0.,0.};
-       gSystem->ProcessEvents();
-       gv->CurrentCamera().RotateRad(0,-3.14/2);
-       gv->SetPerspectiveCamera(TGLViewer::kCameraPerspXOZ,2,30,&camcenter[0],0,0);
-       //TGLPerspectiveCamera& gpc =(TGLPerspectiveCamera&) gv->CurrentCamera();
-       //gpc.Zoom(10,kTRUE,kTRUE);
-
-       gv->RequestDraw();
-       gEve->Redraw3D(kFALSE,kFALSE);
-       cout<<"number of hit points = " <<npoints<<endl;
-    //return ps;
+  return clusters;
 }
 
-void InttEventDisplay::Draw_rhoz_display(){
+std::vector<Acts::Vector3> InttEventDisplay ::writeInttTracks(PHCompositeNode *topNode)
+{
+  std::vector<Acts::Vector3> tracks;
+  
+  // SVTX tracks node
+  SvtxTrackMap *trackmap = findNode::getClass<SvtxTrackMap>(topNode, "SvtxTrackMap");
+
+  /// EvalStack for truth track matching
+  if (!m_svtxEvalStack)
+  {
+    m_svtxEvalStack = new SvtxEvalStack(topNode);
+    m_svtxEvalStack->set_verbosity(Verbosity());
+  }
+
+  m_svtxEvalStack->next_event(topNode);
+
+  Acts::Vector3 globt;
+  
+  if (Verbosity() > 1)
+  {
+    cout << "Get the SVTX tracks" << endl;
+  }
+  
+  for (SvtxTrackMap::Iter iter = trackmap->begin(); iter != trackmap->end(); ++iter)
+    {
+      SvtxTrack *track = iter->second;
+
+      // Get the reconstructed track info
+      m_tr_px = track->get_px();
+      globt(0) = m_tr_px;
+      //cout << "px =" << m_tr_px << endl;
+      m_tr_py = track->get_py();
+      //cout << "py =" << m_tr_py << endl;
+      globt(1) = m_tr_py;
+      m_tr_pz = track->get_pz();
+      //cout << "pz =" << m_tr_pz << endl;
+      globt(2) = m_tr_pz;
+      tracks.push_back(globt);
+
+      m_tr_p = sqrt(m_tr_px * m_tr_px + m_tr_py * m_tr_py + m_tr_pz * m_tr_pz);
+      //cout << "m_tr_p =" << m_tr_p << endl;   
+    }
+    
+  //Tracking = false;
+  return tracks;
+}
+
+std::vector<Acts::Vector3> InttEventDisplay ::writeInttVertexs(PHCompositeNode *topNode)
+{
+  std::vector<Acts::Vector3> vertexs;
+  
+  // SVTX Vertexs node
+  SvtxVertexMap *vertexmap = findNode::getClass<SvtxVertexMap>(topNode, "SvtxVertexMap");
+
+  /// EvalStack for truth track matching
+  if (!m_svtxEvalStack)
+  {
+    m_svtxEvalStack = new SvtxEvalStack(topNode);
+    m_svtxEvalStack->set_verbosity(Verbosity());
+  }
+
+  m_svtxEvalStack->next_event(topNode);
+
+  Acts::Vector3 globv;
+  
+  if (Verbosity() > 1)
+  {
+    cout << "Get the SVTX tracks" << endl;
+  }
+    for (SvtxVertexMap::Iter iter = vertexmap->begin(); iter != vertexmap->end(); ++iter)
+    {
+      SvtxVertex *vertex = iter->second;
+
+      // Get the reconstructed track info
+      m_tr_x = vertex->get_x();
+      globv(0) = m_tr_x;
+      cout << "x =" << m_tr_x << endl;
+      m_tr_y = vertex->get_y();
+      cout << "y =" << m_tr_y << endl;
+      globv(1) = m_tr_y;
+      m_tr_z = vertex->get_z();
+      cout << "z =" << m_tr_z << endl;
+      globv(2) = m_tr_z;
+      vertexs.push_back(globv);
+
+      //m_tr_p = sqrt(m_tr_px * m_tr_px + m_tr_py * m_tr_py + m_tr_pz * m_tr_pz);
+      //cout << "m_tr_p =" << m_tr_p << endl;
+      
+    }
+  return vertexs;
+}
+
+/*
+vector<double> InttEventDisplay::writeMagnetField(PHCompositeNode *topNode)
+{
+  default_config =  PHFieldUtility::DefaultFieldConfig();
+  fieldmap = PHFieldUtility::GetFieldMapNode(default_config, topNode, Verbosity());
+  //fieldmap = PHFieldUtility::GetFieldMapNode(default_config, topNode ,0);
+  //default_config->identify();
+  */
+  /*
+  if (fieldmap)
+  {
+    std::cout << "Found or created fieldmap" << std::endl;
+  }
+  else
+  {
+    std::cout << "Fieldmap not found or created" << std::endl;
+  }
+  */  
+
+  //double field[3];
+  /*
+  //field[0]=fieldmap->get_field_mag_x();
+  field[0]=default_config->get_field_mag_x();
+  cout<<"mag field x ="<<field[0]<<endl;
+  //field[1]=fieldmap->get_field_mag_y();
+  field[1]=default_config->get_field_mag_y();
+  cout<<"mag field y ="<<field[1]<<endl;
+  //field[2]=fieldmap->get_field_mag_z();
+  field[2]=default_config->get_field_mag_z();
+  cout<<"mag field z ="<<field[2]<<endl;
+  */
+  /*
+  fieldmap->GetFieldValue(Point, field);
+  std::cout << "bx: " << field[0] / CLHEP::tesla
+            << " by: " << field[1] / CLHEP::tesla
+            << " bz: " << field[2] / CLHEP::tesla
+            << std::endl;
+
+  std::vector<double> bfield( std::begin(field), std::end(field) );
+
+  return bfield;
+  
+}
+  */
+
+void InttEventDisplay::Display_3D()
+{
   TEveManager::Terminate();
   TEveManager::Create();
   
-  InttEventDisplay::drawhits();
+  if(Tracking == true){
+  InttEventDisplay::DrawHits();
   gEve->AddElement(m_ps);
+
   InttEventDisplay::DrawTracks();
   gEve->AddElement(m_list);
 
-  //geometry load
+  InttEventDisplay::DrawVertexs();
+  gEve->AddElement(m_psv);
+  }else if(Tracking == false){
+
+  InttEventDisplay::DrawHitPos();
+  gEve->AddElement(m_psh);
+  }
+
+  // geometry load
   gGeoManager = gEve->GetGeometry("/sphenix/u/mfujiwara/Documents/inttgeometry.root");
-  TEveGeoTopNode* geom = new TEveGeoTopNode(gGeoManager, gGeoManager->GetTopNode());
+  TEveGeoTopNode *geom = new TEveGeoTopNode(gGeoManager, gGeoManager->GetTopNode());
   geom->CanEditMainTransparency();
-  geom->SetMainTransparency(20);
+  geom->SetMainTransparency(50);
+  gEve->AddGlobalElement(geom);
+
+  // x,y,z axis show
+  TEveViewer *ev = gEve->GetDefaultViewer();
+  TGLViewer *gv = ev->GetGLViewer();
+  gv->SetGuideState(TGLUtil::kAxesOrigin, kTRUE, kFALSE, 0);
+
+  // Camera control
+  Double_t camcenter[3] = {0., 0., 0.};
+  gSystem->ProcessEvents();
+  gv->CurrentCamera().RotateRad(0, -3.14 / 2);
+  gv->SetPerspectiveCamera(TGLViewer::kCameraPerspXOZ, 2, 30, &camcenter[0], 0, 0);
+
+  gv->RequestDraw();
+  gEve->Redraw3D(kFALSE, kFALSE);
+}
+
+void InttEventDisplay::Display_rphi()
+{
+  TEveManager::Terminate();
+  TEveManager::Create();
+  if(Tracking == true){
+  InttEventDisplay::DrawHits();
+  gEve->AddElement(m_ps);
+  InttEventDisplay::DrawTracks();
+  gEve->AddElement(m_list);
+  InttEventDisplay::DrawVertexs();
+  gEve->AddElement(m_psv);
+  }else{
+  InttEventDisplay::DrawHitPos();
+  gEve->AddElement(m_psh);
+  }
+
+  // geometry load
+  gGeoManager = gEve->GetGeometry("/sphenix/u/mfujiwara/Documents/inttgeometry.root");
+  TEveGeoTopNode *geom = new TEveGeoTopNode(gGeoManager, gGeoManager->GetTopNode());
+  geom->CanEditMainTransparency();
+  geom->SetMainTransparency(50);
   gEve->AddGlobalElement(geom);
 
   // camera
-   TEveScene* s = gEve->SpawnNewScene("Projected Event");
-   gEve->GetDefaultViewer()->AddScene(s);
-   TGLViewer* v = gEve->GetDefaultGLViewer();
-   Double_t camcenter[3]={0.,0.,0.};
-   v->SetOrthoCamera(TGLViewer::kCameraOrthoZOY,5,100,&camcenter[0],0.,0.);
-   v->SetCurrentCamera(TGLViewer::kCameraOrthoZOY);
-   
-   // projections
-   TEveProjectionManager* mng =
+  TEveScene *s = gEve->SpawnNewScene("Projected Event");
+  gEve->GetDefaultViewer()->AddScene(s);
+  TGLViewer *v = gEve->GetDefaultGLViewer();
+  Double_t camcenter[3] = {0., 0., 0.};
+  v->SetOrthoCamera(TGLViewer::kCameraOrthoXOY, 5, 100, &camcenter[0], 0., 0.);
+  v->SetCurrentCamera(TGLViewer::kCameraOrthoXOY);
+
+  // projections
+  TEveProjectionManager *mng =
+      new TEveProjectionManager(TEveProjection::kPT_RPhi);
+  s->AddElement(mng);
+  TEveProjectionAxes *axes = new TEveProjectionAxes(mng);
+  axes->SetTitle("TEveProjections demo");
+  s->AddElement(axes);
+  gEve->AddToListTree(axes, kTRUE);
+  gEve->AddToListTree(mng, kTRUE);
+
+  gEve->Redraw3D(kFALSE, kFALSE);
+  v->RequestDraw();
+}
+
+void InttEventDisplay::Display_rhoz()
+{
+  TEveManager::Terminate();
+  TEveManager::Create();
+  
+  if(Tracking == true){
+  InttEventDisplay::DrawHits();
+  gEve->AddElement(m_ps);
+  InttEventDisplay::DrawTracks();
+  gEve->AddElement(m_list);
+  InttEventDisplay::DrawVertexs();
+  gEve->AddElement(m_psv);
+  }else{
+  InttEventDisplay::DrawHitPos();
+  gEve->AddElement(m_psh);
+  }
+
+  // geometry load
+  gGeoManager = gEve->GetGeometry("/sphenix/u/mfujiwara/Documents/inttgeometry.root");
+  TEveGeoTopNode *geom = new TEveGeoTopNode(gGeoManager, gGeoManager->GetTopNode());
+  geom->CanEditMainTransparency();
+  geom->SetMainTransparency(70);
+  gEve->AddGlobalElement(geom);
+
+  // camera
+  TEveScene *s = gEve->SpawnNewScene("Projected Event");
+  gEve->GetDefaultViewer()->AddScene(s);
+  TGLViewer *v = gEve->GetDefaultGLViewer();
+  Double_t camcenter[3] = {0., 0., 0.};
+  v->SetOrthoCamera(TGLViewer::kCameraOrthoZOY, 5, 100, &camcenter[0], 0., 0.);
+  v->SetCurrentCamera(TGLViewer::kCameraOrthoZOY);
+
+  // projections
+  TEveProjectionManager *mng =
       new TEveProjectionManager(TEveProjection::kPT_RhoZ);
-   s->AddElement(mng);
-   TEveProjectionAxes* axes = new TEveProjectionAxes(mng);
-   axes->SetTitle("TEveProjections demo");
-   s->AddElement(axes);
-   gEve->AddToListTree(axes, kTRUE);
-   gEve->AddToListTree(mng, kTRUE);
-   
-   gEve->Redraw3D(kFALSE,kFALSE);
-   v->RequestDraw();
-   
-   
+  s->AddElement(mng);
+  TEveProjectionAxes *axes = new TEveProjectionAxes(mng);
+  axes->SetTitle("TEveProjections demo");
+  s->AddElement(axes);
+  gEve->AddToListTree(axes, kTRUE);
+  gEve->AddToListTree(mng, kTRUE);
+
+  gEve->Redraw3D(kFALSE, kFALSE);
+  v->RequestDraw();
 }
 
-void InttEventDisplay::DrawTracks(){
+void InttEventDisplay::DrawTracks()
+{
   int numtrack = m_tracks.size();
-       cout<<"number of tracks = " <<numtrack<<endl;
-    
-       m_list = new TEveTrackList();
-       TEveTrackPropagator *prop = m_list->GetPropagator();
-       TEveTrack *track[numtrack];
-       TEveRecTrackD *rc = new TEveRecTrackD();
-       int counter = 0;
+  cout << "number of tracks = " << numtrack << endl;
 
-       prop->SetMagFieldObj(new TEveMagFieldConst(0., 0., 0.));
+  m_list = new TEveTrackList();
+  TEveTrackPropagator *prop = m_list->GetPropagator();
+  TEveTrack *track[numtrack];
+  TEveRecTrackD *rc = new TEveRecTrackD();
+  int counter = 0;
 
-       m_list->SetElementName(Form("%s, constB", m_list->GetElementName()));
-       m_list->SetLineColor(kMagenta);
-       for (auto itr = m_tracks.begin(); itr != m_tracks.end();++itr)
-	 {   
-	   auto moment = itr[0];
-	   rc->fV.Set(0.0, 0.0, 0.0);
-	   rc->fP.Set(moment[0],moment[1],moment[2]);
-	   rc->fSign = 1;
-	   track[counter] = new TEveTrack(rc, prop);
-	   m_list->AddElement(track[counter]);
-	   track[counter]->SetLineColor(m_list->GetLineColor());
-	   track[counter]->MakeTrack();
-	   counter ++;
-	 }
-    
-       cout<<"counter ="<<counter<<endl;
-       //gEve->AddElement(list);
+  //prop->SetMagFieldObj(new TEveMagFieldConst(m_bfield[0],m_bfield[1], m_bfield[2]));
+  //cout<<"(bfield[0],bfield[1], bfield[2])="<<m_bfield[0]<<","<<m_bfield[1]<<","<<","<<m_bfield[2]<<endl;
+  prop->SetMagFieldObj(new TEveMagFieldConst(0.,0.,0.));
 
-       //return list;
-}
-
-void InttEventDisplay::drawhits(){
-int npoints = m_clusters.size();
-    cout<<"npoints = " <<npoints<<endl;
-    m_ps = new TEvePointSet(npoints);
-    m_ps->SetOwnIds(kTRUE);
-
-    //cout<<"new TEvePointSet"<<endl;
-
-    int counter  = 0;
-    for(auto itr = m_clusters.begin(); itr != m_clusters.end();++itr ){
-      auto cluster = itr[0];
-      m_ps->SetNextPoint(cluster[0], cluster[1], cluster[2]);
-      m_ps->SetPointId(new TNamed(Form("Point %d", counter), ""));
-      counter ++ ;
-      //cout<<"itr = "<<*itr<<endl;
-      //cout<<"cluster[0] = "<<cluster[0]<<"   cluster[1] = "<<cluster[1]<<"     cluster[2] = "<<cluster[2]<<endl;
-    }
- 
-    m_ps->SetMarkerColor(2);
-    m_ps->SetMarkerSize(1.2);
-    m_ps->SetMarkerStyle(4);
-
-    //return ps;
-}
-
-
-
-void InttEventDisplay::drawCanvas()
-{
-  if(m_c1==NULL){
-    m_c1 = new TCanvas("c1", "c1", 500, 500);
-    m_c1->Range(-100, -100, 100, 100);
+  m_list->SetElementName(Form("%s, constB", m_list->GetElementName()));
+  m_list->SetLineColor(kMagenta);
+  auto vertex = m_vertexs[0];
+  cout<<"vertex x =" << vertex[0]<<"vertex y =" << vertex[1]<<"vertex z =" << vertex[2]<<endl;
+  for (auto itr = m_tracks.begin(); itr != m_tracks.end(); ++itr)
+  {
+    auto moment = itr[0];
+    rc->fV.Set(vertex[0],vertex[1],vertex[2]);
+    rc->fP.Set(moment[0], moment[1], moment[2]);
+    rc->fSign = 1;
+    track[counter] = new TEveTrack(rc, prop);
+    m_list->AddElement(track[counter]);
+    track[counter]->SetLineColor(m_list->GetLineColor());
+    track[counter]->MakeTrack();
+    counter++;
   }
+
+  cout << "counter =" << counter << endl;
 }
 
-void InttEventDisplay::drawHit()
+void InttEventDisplay::DrawHits()
 {
-  if(m_c1==NULL) return;
+  int npoints = m_clusters.size();
+  cout << "npoints = " << npoints << endl;
+  m_ps = new TEvePointSet(npoints);
+  m_ps->SetOwnIds(kTRUE);
 
-  clear();
-
-
-
-    int npoints = m_clusters.size();
-    cout<<"npoints = " <<npoints<<endl;
-    TEvePointSet* ps = new TEvePointSet(npoints);
-    ps->SetOwnIds(kTRUE);
-
-    cout<<"new TEvePointSet"<<endl;
-
-    std::vector<double> gX;
-    std::vector<double> gY;
-    for(auto itr = m_clusters.begin(); itr != m_clusters.end();++itr ){
-      auto cluster = itr[0];
-      gX.push_back(cluster[0]);
-      gY.push_back(cluster[1]);
-    }
-
-    TMarker *pos = new TMarker(gX[0], gY[0], gX.size());
-    pos->SetMarkerColor(2);
-    pos->Draw("same");
-
-  vPos.push_back(pos);
-}
-
-void InttEventDisplay::clear()
-{
-  for(int i=0; i<(int)vPos.size(); i++){
-    delete vPos[i];
+  int counter = 0;
+  for (auto itr = m_clusters.begin(); itr != m_clusters.end(); ++itr)
+  {
+    auto cluster = itr[0];
+    m_ps->SetNextPoint(cluster[0], cluster[1], cluster[2]);
+    m_ps->SetPointId(new TNamed(Form("Point %d", counter), ""));
+    counter++;
   }
-  vPos.clear();
+
+  m_ps->SetMarkerColor(2);
+  m_ps->SetMarkerSize(1.2);
+  m_ps->SetMarkerStyle(4);
+}
+
+void InttEventDisplay::DrawVertexs()
+{
+  
+  int nvertexs = m_vertexs.size();
+  cout << "nvertexs = " << nvertexs << endl;
+  
+  m_psv = new TEvePointSet(nvertexs);
+  m_psv->SetOwnIds(kTRUE);
+
+  int counter = 0;
+  for (auto itr = m_vertexs.begin(); itr != m_vertexs.end(); ++itr)
+  {
+    auto cluster = itr[0];
+    m_psv->SetNextPoint(cluster[0], cluster[1], cluster[2]);
+    m_psv->SetPointId(new TNamed(Form("Point %d", counter), ""));
+    counter++;
+  }
+
+  m_psv->SetMarkerColor(4);
+  m_psv->SetMarkerSize(1.2);
+  m_psv->SetMarkerStyle(4);
+
+}
+
+void InttEventDisplay::DrawHitPos()
+{
+  
+  int nhits = m_hits.size();
+  cout << "nhits = " << nhits << endl;
+  
+  m_psh = new TEvePointSet(nhits);
+  m_psh->SetOwnIds(kTRUE);
+
+  int counter = 0;
+  for (auto itr = m_hits.begin(); itr != m_hits.end(); ++itr)
+  {
+    auto hit = itr[0];
+    m_psh->SetNextPoint(hit[0], hit[1], hit[2]);
+    m_psh->SetPointId(new TNamed(Form("Point %d", counter), ""));
+    counter++;
+  }
+
+  m_psh->SetMarkerColor(5);
+  m_psh->SetMarkerSize(1.2);
+  m_psh->SetMarkerStyle(4);
+
 }

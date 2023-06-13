@@ -19,7 +19,7 @@ class PHCompositeNode;
 class RawClusterContainer;
 class RawCluster;
 class SvtxTrackMap;
-class JetMap;
+//class JetMap;
 class GlobalVertex;
 class PHHepMCGenEventMap;
 class JetEvalStack;
@@ -35,6 +35,12 @@ class JetEvalStack;
 class CylinderGeomIntt;
 class TrkrClusterContainer;
 class ActsGeometry;
+class TrkrHitSetContainer;
+class PHField;
+class PHFieldUtility;
+class PHFieldConfig;
+
+class InttG4HitRead;
 
 /////
 class TCanvas;
@@ -78,37 +84,40 @@ class InttEventDisplay : public SubsysReco
 
 //////
 
-    void DrawHits();
-    void drawCanvas();
-    void drawHit();
-    void make_ladderlocationfile();
-    void DrawHit_rphi();
-    void DrawTracks();
-    void drawhits();
-    void Draw_rhoz_display();
+  //void drawCanvas();
+  //void drawHit();
+  //void make_ladderlocationfile();
+  //void DrawHit_rphi();
+  void DrawTracks();
+  void DrawHits();
+  void DrawVertexs();
+  void DrawHitPos();
+  void Display_3D();
+  void Display_rphi();
+  void Display_rhoz();
+  
+  //void clear();
+  
+  bool Tracking = false;
+ 
 
-    void clear();
+ private:
+  TCanvas *m_c1;
 
-    bool Tracking;
+  //std::vector<TMarker*> vPos;
+  
+  std::vector<Acts::Vector3> m_clusters;
+  std::vector<Acts::Vector3> m_hits;
+  std::vector<Acts::Vector3> m_tracks;
+  std::vector<Acts::Vector3> m_vertexs;
+  std::vector<double> m_bfield;
+     
+  TEvePointSet * m_ps;
+  TEvePointSet * m_psv;
+  TEvePointSet * m_psh;
+  TEveTrackList * m_list;
 
-  private:
-    TCanvas *m_c1;
-
-    std::vector<TMarker*> vPos;
-
-    std::vector<Acts::Vector3> m_clusters;
-    std::vector<Acts::Vector3> m_tracks;
-
-    std::vector<double> ladderALocationX;
-    std::vector<double> ladderALocationY;
-    std::vector<double> ladderALocationZ;
-
-    std::vector<double> ladderBLocationX;
-    std::vector<double> ladderBLocationY;
-    std::vector<double> ladderBLocationZ;
-    
-    TEvePointSet * m_ps;
-    TEveTrackList * m_list;
+  double Point[4] = {0};
   
   
 //////
@@ -156,8 +165,10 @@ class InttEventDisplay : public SubsysReco
   JetEvalStack *m_jetEvalStack = nullptr;
   ActsGeometry *m_tGeometry = nullptr;
   TrkrClusterContainer *m_clusterMap = nullptr;
+  TrkrHitSetContainer *m_hitMap = nullptr;
   CylinderGeomIntt* m_geom = nullptr;
- 
+  PHField *fieldmap = nullptr;
+  PHFieldConfig *default_config = nullptr;
 
   /// Methods for grabbing the data
   void getTracks(PHCompositeNode *topNode);
@@ -169,8 +180,11 @@ class InttEventDisplay : public SubsysReco
   void getNode(PHCompositeNode *topNode);
 
   std::vector<Acts::Vector3> writeInttClusters(PHCompositeNode */*topNode*/);
+  std::vector<Acts::Vector3> writeInttHits(PHCompositeNode */*topNode*/);
   std::vector<Acts::Vector3> writeInttTracks(PHCompositeNode *topNode);
-
+  std::vector<Acts::Vector3> writeInttVertexs(PHCompositeNode *topNode);
+  //std::vector<double> writeMagnetField(PHCompositeNode *topNode);
+  
   void initializeVariables();
   void initializeTrees();
 
