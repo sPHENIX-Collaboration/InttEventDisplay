@@ -39,6 +39,7 @@ class TrkrHitSetContainer;
 class PHField;
 class PHFieldUtility;
 class PHFieldConfig;
+class PHG4Reco;
 
 class InttG4HitRead;
 
@@ -90,15 +91,15 @@ class InttEventDisplay : public SubsysReco
   //void DrawHit_rphi();
   void DrawTracks();
   void DrawHits();
-  void DrawVertexs();
-  void DrawHitPos();
+  void DrawVertex();
+  void DrawClusters();
   void Display_3D();
   void Display_rphi();
   void Display_rhoz();
   
   //void clear();
   
-  bool Tracking = false;
+  //bool Tracking = true;
  
 
  private:
@@ -109,7 +110,7 @@ class InttEventDisplay : public SubsysReco
   std::vector<Acts::Vector3> m_clusters;
   std::vector<Acts::Vector3> m_hits;
   std::vector<Acts::Vector3> m_tracks;
-  std::vector<Acts::Vector3> m_vertexs;
+  std::vector<Acts::Vector3> m_vertex;
   std::vector<double> m_bfield;
      
   TEvePointSet * m_ps;
@@ -182,7 +183,7 @@ class InttEventDisplay : public SubsysReco
   std::vector<Acts::Vector3> writeInttClusters(PHCompositeNode */*topNode*/);
   std::vector<Acts::Vector3> writeInttHits(PHCompositeNode */*topNode*/);
   std::vector<Acts::Vector3> writeInttTracks(PHCompositeNode *topNode);
-  std::vector<Acts::Vector3> writeInttVertexs(PHCompositeNode *topNode);
+  std::vector<Acts::Vector3> writeInttVertex(PHCompositeNode *topNode);
   //std::vector<double> writeMagnetField(PHCompositeNode *topNode);
   
   void initializeVariables();

@@ -103,6 +103,7 @@
 #include <phfield/PHFieldConfigv1.h>
 #include <phfield/PHFieldUtility.h>
 #include <phool/PHIODataNode.h>
+#include <g4main/PHG4Reco.h>
 //////////////
 
 using namespace std;
@@ -209,24 +210,19 @@ int InttEventDisplay::process_event(PHCompositeNode *topNode)
 
   // Get some Nodes. INTT geometry + hit container
   getNode(topNode);
-
-  if(Tracking == true)
-    {
-      m_clusters = writeInttClusters(topNode);
-      cout << "number of clusters is " << m_clusters.size() << endl<< endl<< endl<< endl;
-      m_tracks = writeInttTracks(topNode);
-      cout << "number of tracks is " << m_tracks.size() << endl<< endl<< endl<< endl;
-      m_vertexs = writeInttVertexs(topNode);
-      cout << "number of vertexs is "<< m_vertexs.size()<<endl;
-      
-    }
-  else if(Tracking == false){
   
-    m_hits = writeInttHits(topNode);
-    cout << "number of hits is "<< m_hits.size()<<endl;
-    
-  }
+  m_hits = writeInttHits(topNode);
+  cout << "number of hits is "<< m_hits.size()<<endl;
+  
+  m_clusters = writeInttClusters(topNode);
+  cout << "number of clusters is " << m_clusters.size() << endl<< endl<< endl<< endl;
 
+  m_tracks = writeInttTracks(topNode);
+  cout << "number of tracks is " << m_tracks.size() << endl<< endl<< endl<< endl;
+  m_vertex = writeInttVertex(topNode);
+  cout << "number of vertex is "<< m_vertex.size()<<endl;
+  
+ 
   //m_bfield=writeMagnetField(topNode);
   //cout<<"bfield (x,y,z)= ("<<m_bfield[0]<<","<<m_bfield[1]<<","<<m_bfield[2]<<")"<<endl;
 
@@ -1242,6 +1238,7 @@ std::vector<Acts::Vector3>  InttEventDisplay ::writeInttHits(PHCompositeNode * t
   // return m_hits;
 
   std::vector<Acts::Vector3> hits;
+  
    PHG4HitContainer *g4hit = findNode::getClass<PHG4HitContainer>(topNode, "G4HIT_INTT");
   if (!g4hit)
   {
@@ -1252,16 +1249,37 @@ std::vector<Acts::Vector3>  InttEventDisplay ::writeInttHits(PHCompositeNode * t
   for (PHG4HitContainer::ConstIterator hiter = hit_begin_end.first; hiter != hit_begin_end.second; ++hiter)
   {
     Acts::Vector3 glob;
-    std::cout << "x: " << hiter->second->get_avg_x() << std::endl;
+    //std::cout << "x: " << hiter->second->get_avg_x() << std::endl;
     glob(0)=hiter->second->get_avg_x();
-    std::cout << "y: " << hiter->second->get_avg_y() << std::endl;
+    //std::cout << "y: " << hiter->second->get_avg_y() << std::endl;
     glob(1)=hiter->second->get_avg_y();
-    std::cout << "z: " << hiter->second->get_avg_z() << std::endl;
+    //std::cout << "z: " << hiter->second->get_avg_z() << std::endl;
     glob(2)=hiter->second->get_avg_z();
     hits.push_back(glob);
   }
   std::cout << "InttG4HitRead::process_event(PHCompositeNode *topNode) Processing Event" << std::endl;
-
+  
+  /*
+  TrkrHitSetContainer *trkrhit = findNode::getClass<TrkrHitSetContainer>(topNode, "TRKR_HITSET");
+  if (!trkrhit)
+  {
+    std::cout << "Could not locate g4 hit node TRKR_HITSET " << std::endl;
+    exit(1);
+  }
+  PHG4HitContainer::ConstRange hit_begin_end = trkrhit->getHits();
+  for (PHG4HitContainer::ConstIterator hiter = hit_begin_end.first; hiter != hit_begin_end.second; ++hiter)
+  {
+    Acts::Vector3 glob;
+    //std::cout << "x: " << hiter->second->get_avg_x() << std::endl;
+    glob(0)=hiter->second->get_avg_x();
+    //std::cout << "y: " << hiter->second->get_avg_y() << std::endl;
+    glob(1)=hiter->second->get_avg_y();
+    //std::cout << "z: " << hiter->second->get_avg_z() << std::endl;
+    glob(2)=hiter->second->get_avg_z();
+    hits.push_back(glob);
+  }
+  std::cout << "InttG4HitRead::process_event(PHCompositeNode *topNode) Processing Event" << std::endl;
+  */
   return hits;
 }
 
@@ -1335,11 +1353,11 @@ std::vector<Acts::Vector3> InttEventDisplay ::writeInttTracks(PHCompositeNode *t
   return tracks;
 }
 
-std::vector<Acts::Vector3> InttEventDisplay ::writeInttVertexs(PHCompositeNode *topNode)
+std::vector<Acts::Vector3> InttEventDisplay ::writeInttVertex(PHCompositeNode *topNode)
 {
-  std::vector<Acts::Vector3> vertexs;
+  std::vector<Acts::Vector3> vertex;
   
-  // SVTX Vertexs node
+  // SVTX Vertex node
   SvtxVertexMap *vertexmap = findNode::getClass<SvtxVertexMap>(topNode, "SvtxVertexMap");
 
   /// EvalStack for truth track matching
@@ -1359,30 +1377,32 @@ std::vector<Acts::Vector3> InttEventDisplay ::writeInttVertexs(PHCompositeNode *
   }
     for (SvtxVertexMap::Iter iter = vertexmap->begin(); iter != vertexmap->end(); ++iter)
     {
-      SvtxVertex *vertex = iter->second;
+      SvtxVertex *vertexs = iter->second;
 
       // Get the reconstructed track info
-      m_tr_x = vertex->get_x();
+      m_tr_x = vertexs->get_x();
       globv(0) = m_tr_x;
       cout << "x =" << m_tr_x << endl;
-      m_tr_y = vertex->get_y();
+      m_tr_y = vertexs->get_y();
       cout << "y =" << m_tr_y << endl;
       globv(1) = m_tr_y;
-      m_tr_z = vertex->get_z();
+      m_tr_z = vertexs->get_z();
       cout << "z =" << m_tr_z << endl;
       globv(2) = m_tr_z;
-      vertexs.push_back(globv);
+      vertex.push_back(globv);
 
       //m_tr_p = sqrt(m_tr_px * m_tr_px + m_tr_py * m_tr_py + m_tr_pz * m_tr_pz);
       //cout << "m_tr_p =" << m_tr_p << endl;
       
     }
-  return vertexs;
+  return vertex;
 }
 
-/*
-vector<double> InttEventDisplay::writeMagnetField(PHCompositeNode *topNode)
-{
+
+//vector<double> InttEventDisplay::writeMagnetField(PHCompositeNode *topNode)
+//{
+  //PHG4Reco *g4Reco = new PHG4Reco();
+  /*
   default_config =  PHFieldUtility::DefaultFieldConfig();
   fieldmap = PHFieldUtility::GetFieldMapNode(default_config, topNode, Verbosity());
   //fieldmap = PHFieldUtility::GetFieldMapNode(default_config, topNode ,0);
@@ -1412,37 +1432,41 @@ vector<double> InttEventDisplay::writeMagnetField(PHCompositeNode *topNode)
   cout<<"mag field z ="<<field[2]<<endl;
   */
   /*
-  fieldmap->GetFieldValue(Point, field);
+  //fieldmap->GetFieldValue(Point, field);
+  g4Reco->PHG4MagneticField::GetFieldValue(Point, field);
   std::cout << "bx: " << field[0] / CLHEP::tesla
             << " by: " << field[1] / CLHEP::tesla
             << " bz: " << field[2] / CLHEP::tesla
             << std::endl;
 
   std::vector<double> bfield( std::begin(field), std::end(field) );
-
-  return bfield;
-  
-}
   */
+
+  //return bfield;
+//}
 
 void InttEventDisplay::Display_3D()
 {
   TEveManager::Terminate();
   TEveManager::Create();
   
-  if(Tracking == true){
   InttEventDisplay::DrawHits();
-  gEve->AddElement(m_ps);
-
+  if(m_psh!=nullptr){
+    gEve->AddElement(m_psh);
+  }
+  InttEventDisplay::DrawClusters();
+  if(m_ps!=nullptr){
+    gEve->AddElement(m_ps);
+  }
+  
   InttEventDisplay::DrawTracks();
-  gEve->AddElement(m_list);
-
-  InttEventDisplay::DrawVertexs();
-  gEve->AddElement(m_psv);
-  }else if(Tracking == false){
-
-  InttEventDisplay::DrawHitPos();
-  gEve->AddElement(m_psh);
+  if(m_list!=nullptr){
+    gEve->AddElement(m_list);
+  }
+  
+  InttEventDisplay::DrawVertex();
+  if(m_psv!=nullptr){
+    gEve->AddElement(m_psv);
   }
 
   // geometry load
@@ -1471,18 +1495,26 @@ void InttEventDisplay::Display_rphi()
 {
   TEveManager::Terminate();
   TEveManager::Create();
-  if(Tracking == true){
+  
   InttEventDisplay::DrawHits();
-  gEve->AddElement(m_ps);
-  InttEventDisplay::DrawTracks();
-  gEve->AddElement(m_list);
-  InttEventDisplay::DrawVertexs();
-  gEve->AddElement(m_psv);
-  }else{
-  InttEventDisplay::DrawHitPos();
-  gEve->AddElement(m_psh);
+  if(m_psh!=nullptr){
+    gEve->AddElement(m_psh);
   }
-
+  InttEventDisplay::DrawClusters();
+  if(m_ps!=nullptr){
+    gEve->AddElement(m_ps);
+  }
+  
+  InttEventDisplay::DrawTracks();
+  if(m_list!=nullptr){
+    gEve->AddElement(m_list);
+  }
+  
+  InttEventDisplay::DrawVertex();
+  if(m_psv!=nullptr){
+    gEve->AddElement(m_psv);
+  }
+  
   // geometry load
   gGeoManager = gEve->GetGeometry("/sphenix/u/mfujiwara/Documents/inttgeometry.root");
   TEveGeoTopNode *geom = new TEveGeoTopNode(gGeoManager, gGeoManager->GetTopNode());
@@ -1517,16 +1549,23 @@ void InttEventDisplay::Display_rhoz()
   TEveManager::Terminate();
   TEveManager::Create();
   
-  if(Tracking == true){
   InttEventDisplay::DrawHits();
-  gEve->AddElement(m_ps);
+  if(m_psh!=nullptr){
+    gEve->AddElement(m_psh);
+  }
+  InttEventDisplay::DrawClusters();
+  if(m_ps!=nullptr){
+    gEve->AddElement(m_ps);
+  }
+  
   InttEventDisplay::DrawTracks();
-  gEve->AddElement(m_list);
-  InttEventDisplay::DrawVertexs();
-  gEve->AddElement(m_psv);
-  }else{
-  InttEventDisplay::DrawHitPos();
-  gEve->AddElement(m_psh);
+  if(m_list!=nullptr){
+    gEve->AddElement(m_list);
+  }
+  
+  InttEventDisplay::DrawVertex();
+  if(m_psv!=nullptr){
+    gEve->AddElement(m_psv);
   }
 
   // geometry load
@@ -1562,8 +1601,14 @@ void InttEventDisplay::DrawTracks()
 {
   int numtrack = m_tracks.size();
   cout << "number of tracks = " << numtrack << endl;
-
   m_list = new TEveTrackList();
+
+  if(numtrack==0){
+    cout<<"No track!"<<endl;
+    m_list = nullptr;
+    return;
+  }
+
   TEveTrackPropagator *prop = m_list->GetPropagator();
   TEveTrack *track[numtrack];
   TEveRecTrackD *rc = new TEveRecTrackD();
@@ -1575,7 +1620,7 @@ void InttEventDisplay::DrawTracks()
 
   m_list->SetElementName(Form("%s, constB", m_list->GetElementName()));
   m_list->SetLineColor(kMagenta);
-  auto vertex = m_vertexs[0];
+  auto vertex = m_vertex[0];
   cout<<"vertex x =" << vertex[0]<<"vertex y =" << vertex[1]<<"vertex z =" << vertex[2]<<endl;
   for (auto itr = m_tracks.begin(); itr != m_tracks.end(); ++itr)
   {
@@ -1593,11 +1638,18 @@ void InttEventDisplay::DrawTracks()
   cout << "counter =" << counter << endl;
 }
 
-void InttEventDisplay::DrawHits()
+void InttEventDisplay::DrawClusters()
 {
   int npoints = m_clusters.size();
   cout << "npoints = " << npoints << endl;
   m_ps = new TEvePointSet(npoints);
+
+  if(npoints==0){
+    cout<<"No Cluster!"<<endl;
+    m_ps = nullptr;
+    return;
+  }
+
   m_ps->SetOwnIds(kTRUE);
 
   int counter = 0;
@@ -1605,6 +1657,7 @@ void InttEventDisplay::DrawHits()
   {
     auto cluster = itr[0];
     m_ps->SetNextPoint(cluster[0], cluster[1], cluster[2]);
+    cout<<"xyz = "<<cluster[0]<<","<< cluster[1]<<","<< cluster[2]<<endl;
     m_ps->SetPointId(new TNamed(Form("Point %d", counter), ""));
     counter++;
   }
@@ -1614,17 +1667,24 @@ void InttEventDisplay::DrawHits()
   m_ps->SetMarkerStyle(4);
 }
 
-void InttEventDisplay::DrawVertexs()
+void InttEventDisplay::DrawVertex()
 {
   
-  int nvertexs = m_vertexs.size();
-  cout << "nvertexs = " << nvertexs << endl;
+  int nvertex = m_vertex.size();
+  cout << "nvertex = " << nvertex << endl;
+  m_psv = new TEvePointSet(nvertex);
+
+  if(nvertex==0){
+    cout<<"No vertex!"<<endl;
+    m_psv=nullptr;
+    return;
+  }
   
-  m_psv = new TEvePointSet(nvertexs);
+  m_psv = new TEvePointSet(nvertex);
   m_psv->SetOwnIds(kTRUE);
 
   int counter = 0;
-  for (auto itr = m_vertexs.begin(); itr != m_vertexs.end(); ++itr)
+  for (auto itr = m_vertex.begin(); itr != m_vertex.end(); ++itr)
   {
     auto cluster = itr[0];
     m_psv->SetNextPoint(cluster[0], cluster[1], cluster[2]);
@@ -1638,13 +1698,19 @@ void InttEventDisplay::DrawVertexs()
 
 }
 
-void InttEventDisplay::DrawHitPos()
+void InttEventDisplay::DrawHits()
 {
   
   int nhits = m_hits.size();
   cout << "nhits = " << nhits << endl;
-  
   m_psh = new TEvePointSet(nhits);
+
+  if(nhits==0){
+    cout<<"No hit!"<<endl;
+    m_psh=nullptr;
+    return;
+  }
+  
   m_psh->SetOwnIds(kTRUE);
 
   int counter = 0;
