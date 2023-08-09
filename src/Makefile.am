@@ -14,9 +14,11 @@ AM_CPPFLAGS = \
 
 pkginclude_HEADERS = \
   InttEventDisplay.h
+  InttAna.h
 
 libintteventdisplay_la_SOURCES = \
   InttEventDisplay.cc 
+  InttAna.cc
 
 libintteventdisplay_la_LDFLAGS = \
   -L$(libdir) \
