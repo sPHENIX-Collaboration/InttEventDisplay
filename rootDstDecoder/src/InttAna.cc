@@ -152,11 +152,22 @@ int InttAna::process_event(PHCompositeNode *topNode)
         int ladder_phi = InttDefs::getLadderPhiId(cluskey);
         int size       = cluster->getSize();
 	
+	clusterpos += "{\"x\": "+ to_string(globalPos.x());
+	clusterpos += ",\"y\": "+ to_string(globalPos.y());
+	clusterpos += ",\"z\": "+ to_string(globalPos.z());
+	clusterpos += ",\"e\" : 0 },";
 
         if(nCluster<5) {
             cout<<"xyz : "<<globalPos.x()<<" "<< globalPos.y()<<" "<< globalPos.z()<<" :  "
                 <<cluster->getAdc()<<" "<<size<<" "<<inttlayer<<" "<<ladder_z<<" "<<ladder_phi<<endl;
-	   
+	    
+	    /*
+	    clusterpos += "{\"x\": "+ to_string(globalPos.x());
+	    clusterpos += ",\"y\": "+ to_string(globalPos.y());
+	    clusterpos += ",\"z\": "+ to_string(globalPos.z());
+	    clusterpos += ",\"e\" : 0 },";
+	    */
+	
 	}
         else {
           if(!exceedNwrite) {
@@ -165,7 +176,7 @@ int InttAna::process_event(PHCompositeNode *topNode)
           }
         }
 
-	
+	clusters[layer].push_back(globalPos);
         nCluster++;
 
         ntpval[0] = nclusadd; //bco_full
@@ -238,6 +249,14 @@ int InttAna::process_event(PHCompositeNode *topNode)
   }
 
   evtCount++;
+
+  /*
+  clusterpos.pop_back();
+  cout<<"clusterpos.pop_back"<<endl;
+  fout.open(jsonfilename);
+  fout<<header<<clusterpos<<footer<<endl;
+  fout.close();
+  */
 
   return Fun4AllReturnCodes::EVENT_OK;
 }

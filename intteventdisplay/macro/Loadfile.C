@@ -39,7 +39,7 @@
 #include <phool/recoConsts.h>
 
 
-#include <InttEventDisplay.h>
+#include <../src/InttEventDisplay.h>
 
 R__LOAD_LIBRARY(libintteventdisplay.so)
 R__LOAD_LIBRARY(libfun4all.so)
@@ -48,7 +48,7 @@ R__LOAD_LIBRARY(libffamodules.so)
 InttEventDisplay*inttEventDisplay;
 Fun4AllServer * se;// = Fun4AllServer::instance();
 
-void Loadfile(string inputfilename="/sphenix/user/jbertaux/commissioning/root_files/beam_intt5-00009328-0000.root"){
+void Loadfile(string inputfilename="/sphenix/u/mfujiwara/Workspace/tutorials/inttgitclone/AnaTutorial/macro/dst_intt_run20869.root"){
   
   const char*inputfile = inputfilename.c_str();
   se = Fun4AllServer::instance();
