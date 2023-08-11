@@ -39,7 +39,7 @@
 #include <phool/recoConsts.h>
 
 
-#include <../src/InttEventDisplay.h>
+#include <InttEventDisplay.h>
 
 R__LOAD_LIBRARY(libintteventdisplay.so)
 R__LOAD_LIBRARY(libfun4all.so)
@@ -48,7 +48,7 @@ R__LOAD_LIBRARY(libffamodules.so)
 InttEventDisplay*inttEventDisplay;
 Fun4AllServer * se;// = Fun4AllServer::instance();
 
-void Loadfile(string inputfilename="/sphenix/u/mfujiwara/Workspace/tutorials/inttgitclone/AnaTutorial/macro/dst_intt_run20869.root"){
+void Loadfile(string inputfilename=/*"G4sPHENIX_1event.root"*/"/sphenix/u/mfujiwara/Workspace/tutorials/inttgitclone/AnaTutorial/macro/dst_intt_run20869.root"){
   
   const char*inputfile = inputfilename.c_str();
   se = Fun4AllServer::instance();
@@ -93,10 +93,13 @@ void Loadfile(string inputfilename="/sphenix/u/mfujiwara/Workspace/tutorials/int
   cout<<"finish set analyze clusters true"<<endl;
   inttEventDisplay->analyzeJets(false);
   inttEventDisplay->analyzeTruth(false);
+  inttEventDisplay->useTruthClusters(false);
  
   se->registerSubsystem(inttEventDisplay);
   cout<<"finish register subsystem"<<endl;
   se->run(nEvents);
   cout<<"finish run"<<endl;
+
+  //cout<<"event number = "<<nEvents<<endl;
   return 0;
 }
