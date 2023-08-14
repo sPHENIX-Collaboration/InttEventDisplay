@@ -1,5 +1,4 @@
 # InttEventDisplay
-Intt Event Display
 
 How to use INTT Event Display
 
@@ -17,6 +16,10 @@ How to use INTT Event Display
 3. Use Event display
     1. Command 
         1. root Loadfile.C 
+	2. inttEventDislay->Display_3D()or Display_rphi()or Display_rhoz()
+	   Display_3D() shows 3D view and you can turn event display.
+	   Display_rphi() shows figure like x-y plane.
+	   Display_rhoz() shows figure like y-z plane.
     2. Programs to use
         1.InttEventDisplay/intteventdisplay
             * InttEventDisplay/intteventdisplay/macro/Loadfile.C sets inputfile by L51.

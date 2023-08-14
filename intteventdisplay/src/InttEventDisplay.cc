@@ -104,6 +104,10 @@
 #include <phfield/PHFieldUtility.h>
 #include <phool/PHIODataNode.h>
 #include <g4main/PHG4Reco.h>
+#include <TGeoOverlap.h>
+#include <phgeom/PHGeomUtility.h>
+#include <TGLAnnotation.h>
+//#include <g4gdml/PHG4GDMLUtility.hh>
 //////////////
 
 using namespace std;
@@ -161,6 +165,9 @@ int InttEventDisplay::Init(PHCompositeNode * /*topNode*/)
   m_phi_h = new TH1D("phi_h", ";Counts;#phi [rad]", 50, -6, 6);
   m_eta_phi_h = new TH2F("phi_eta_h", ";#eta;#phi [rad]", 10, -1, 1, 50, -6, 6);
 
+  //const string inttgdmlgeom = PHGeomUtility::GenerateGeometryFileName("gdml");
+  //PHG4Reco::Dump_GDML(inttgdmlgeom);
+
   return 0;
 }
 
@@ -176,6 +183,10 @@ int InttEventDisplay::process_event(PHCompositeNode *topNode)
   cout << "process_event : start" << endl<< endl<< endl<< endl<< endl;
   cout << "process_event : start" << endl<< endl<< endl<< endl<< endl;
   cout << "process_event : start" << endl<< endl<< endl<< endl<< endl;
+
+  //static int ievt=0;
+  cout<<"InttEvt::process evt : "<<ievt++<<endl;
+
   PHG4CylinderGeomContainer *geom_container = findNode::getClass<PHG4CylinderGeomContainer>(topNode, "CYLINDERGEOM_INTT");
 
   CylinderGeomIntt *geom = dynamic_cast<CylinderGeomIntt *>(geom_container->GetLayerGeom(3));
@@ -222,7 +233,7 @@ int InttEventDisplay::process_event(PHCompositeNode *topNode)
   m_vertex = writeInttVertex(topNode);
   cout << "number of vertex is "<< m_vertex.size()<<endl;
   
- 
+  //cout <<"Event number ="<< se->EventCounter() <<endl;
   //m_bfield=writeMagnetField(topNode);
   //cout<<"bfield (x,y,z)= ("<<m_bfield[0]<<","<<m_bfield[1]<<","<<m_bfield[2]<<")"<<endl;
 
@@ -272,6 +283,11 @@ int InttEventDisplay::process_event(PHCompositeNode *topNode)
   }
   std::cout << "InttG4HitRead::process_event(PHCompositeNode *topNode) Processing Event" << std::endl;
   */
+
+  //const string inttgdmlgeom = PHGeomUtility::GenerateGeometryFileName("gdml");
+  //Dump_GDML(inttgdmlgeom);
+
+  //gGeoManager->Export("Full_geom.gdml");
 
   return Fun4AllReturnCodes::EVENT_OK;
 }
@@ -1153,7 +1169,7 @@ void InttEventDisplay::getNode(PHCompositeNode *topNode)
                                                             "TRKR_CLUSTER");
     cout << "TRKR_CLUSTER" << endl;
   }
-
+  
   if (!m_clusterMap)
   {
     cout << PHWHERE
@@ -1266,8 +1282,8 @@ std::vector<Acts::Vector3>  InttEventDisplay ::writeInttHits(PHCompositeNode * t
     std::cout << "Could not locate g4 hit node TRKR_HITSET " << std::endl;
     exit(1);
   }
-  PHG4HitContainer::ConstRange hit_begin_end = trkrhit->getHits();
-  for (PHG4HitContainer::ConstIterator hiter = hit_begin_end.first; hiter != hit_begin_end.second; ++hiter)
+  TrkrHitSetContainer::ConstRange hit_begin_end = trkrhit->getHitSets();
+  for (TrkrHitSetContainer::ConstIterator hiter = hit_begin_end.first; hiter != hit_begin_end.second; ++hiter)
   {
     Acts::Vector3 glob;
     //std::cout << "x: " << hiter->second->get_avg_x() << std::endl;
@@ -1278,7 +1294,7 @@ std::vector<Acts::Vector3>  InttEventDisplay ::writeInttHits(PHCompositeNode * t
     glob(2)=hiter->second->get_avg_z();
     hits.push_back(glob);
   }
-  std::cout << "InttG4HitRead::process_event(PHCompositeNode *topNode) Processing Event" << std::endl;
+  std::cout << "TRKRHITSET::process_event(PHCompositeNode *topNode) Processing Event" << std::endl;
   */
   return hits;
 }
@@ -1302,7 +1318,7 @@ std::vector<Acts::Vector3> InttEventDisplay ::writeInttClusters(PHCompositeNode 
       }
     }
   }
-
+    
   return clusters;
 }
 
@@ -1450,27 +1466,29 @@ void InttEventDisplay::Display_3D()
   TEveManager::Terminate();
   TEveManager::Create();
   
-  InttEventDisplay::DrawHits();
+  InttEventDisplay::drawHits();
   if(m_psh!=nullptr){
     gEve->AddElement(m_psh);
   }
-  InttEventDisplay::DrawClusters();
+  
+  InttEventDisplay::drawClusters();
   if(m_ps!=nullptr){
     gEve->AddElement(m_ps);
-  }
-  
-  InttEventDisplay::DrawTracks();
+  }  
+
+  InttEventDisplay::drawTracks();
   if(m_list!=nullptr){
     gEve->AddElement(m_list);
   }
   
-  InttEventDisplay::DrawVertex();
+  InttEventDisplay::drawVertex();
   if(m_psv!=nullptr){
     gEve->AddElement(m_psv);
   }
-
+  
   // geometry load
   gGeoManager = gEve->GetGeometry("/sphenix/u/mfujiwara/Documents/inttgeometry.root");
+  //gGeoManager->SetTopVolume(gGeoManager->FindVolumeFast("log_INTT_Wrapper"));
   TEveGeoTopNode *geom = new TEveGeoTopNode(gGeoManager, gGeoManager->GetTopNode());
   geom->CanEditMainTransparency();
   geom->SetMainTransparency(50);
@@ -1480,6 +1498,12 @@ void InttEventDisplay::Display_3D()
   TEveViewer *ev = gEve->GetDefaultViewer();
   TGLViewer *gv = ev->GetGLViewer();
   gv->SetGuideState(TGLUtil::kAxesOrigin, kTRUE, kFALSE, 0);
+
+  //Legend
+  string legend = "eid :"+to_string(ievt-1)+", Nclusters: "+to_string(m_clusters.size());
+  TGLAnnotation * an = new TGLAnnotation(gv,legend.c_str(),0.05,0.95);
+  an->SetTextSize(0.05);
+  an->SetTextColor(kWhite);
 
   // Camera control
   Double_t camcenter[3] = {0., 0., 0.};
@@ -1496,27 +1520,27 @@ void InttEventDisplay::Display_rphi()
   TEveManager::Terminate();
   TEveManager::Create();
   
-  InttEventDisplay::DrawHits();
+  InttEventDisplay::drawHits();
   if(m_psh!=nullptr){
     gEve->AddElement(m_psh);
   }
-  InttEventDisplay::DrawClusters();
+  InttEventDisplay::drawClusters();
   if(m_ps!=nullptr){
     gEve->AddElement(m_ps);
   }
   
-  InttEventDisplay::DrawTracks();
+  InttEventDisplay::drawTracks();
   if(m_list!=nullptr){
     gEve->AddElement(m_list);
   }
   
-  InttEventDisplay::DrawVertex();
+  InttEventDisplay::drawVertex();
   if(m_psv!=nullptr){
     gEve->AddElement(m_psv);
   }
   
   // geometry load
-  gGeoManager = gEve->GetGeometry("/sphenix/u/mfujiwara/Documents/inttgeometry.root");
+  gGeoManager = gEve->GetGeometry("/sphenix/u/mfujiwara/Documents/inttgeometry_rphi.root");
   TEveGeoTopNode *geom = new TEveGeoTopNode(gGeoManager, gGeoManager->GetTopNode());
   geom->CanEditMainTransparency();
   geom->SetMainTransparency(50);
@@ -1529,6 +1553,12 @@ void InttEventDisplay::Display_rphi()
   Double_t camcenter[3] = {0., 0., 0.};
   v->SetOrthoCamera(TGLViewer::kCameraOrthoXOY, 5, 100, &camcenter[0], 0., 0.);
   v->SetCurrentCamera(TGLViewer::kCameraOrthoXOY);
+
+  //Legend
+  string legend = "eid :"+to_string(ievt-1)+", Nclusters: "+to_string(m_clusters.size());
+  TGLAnnotation * an = new TGLAnnotation(v,legend.c_str(),0.05,0.95);
+  an->SetTextSize(0.05);
+  an->SetTextColor(kWhite);
 
   // projections
   TEveProjectionManager *mng =
@@ -1549,21 +1579,21 @@ void InttEventDisplay::Display_rhoz()
   TEveManager::Terminate();
   TEveManager::Create();
   
-  InttEventDisplay::DrawHits();
+  InttEventDisplay::drawHits();
   if(m_psh!=nullptr){
     gEve->AddElement(m_psh);
   }
-  InttEventDisplay::DrawClusters();
+  InttEventDisplay::drawClusters();
   if(m_ps!=nullptr){
     gEve->AddElement(m_ps);
   }
   
-  InttEventDisplay::DrawTracks();
+  InttEventDisplay::drawTracks();
   if(m_list!=nullptr){
     gEve->AddElement(m_list);
   }
   
-  InttEventDisplay::DrawVertex();
+  InttEventDisplay::drawVertex();
   if(m_psv!=nullptr){
     gEve->AddElement(m_psv);
   }
@@ -1572,7 +1602,7 @@ void InttEventDisplay::Display_rhoz()
   gGeoManager = gEve->GetGeometry("/sphenix/u/mfujiwara/Documents/inttgeometry.root");
   TEveGeoTopNode *geom = new TEveGeoTopNode(gGeoManager, gGeoManager->GetTopNode());
   geom->CanEditMainTransparency();
-  geom->SetMainTransparency(70);
+  geom->SetMainTransparency(80);
   gEve->AddGlobalElement(geom);
 
   // camera
@@ -1582,6 +1612,12 @@ void InttEventDisplay::Display_rhoz()
   Double_t camcenter[3] = {0., 0., 0.};
   v->SetOrthoCamera(TGLViewer::kCameraOrthoZOY, 5, 100, &camcenter[0], 0., 0.);
   v->SetCurrentCamera(TGLViewer::kCameraOrthoZOY);
+
+  //Legend
+  string legend = "eid :"+to_string(ievt-1)+", Nclusters: "+to_string(m_clusters.size());
+  TGLAnnotation * an = new TGLAnnotation(v,legend.c_str(),0.05,0.95);
+  an->SetTextSize(0.05);
+  an->SetTextColor(kWhite);
 
   // projections
   TEveProjectionManager *mng =
@@ -1597,7 +1633,7 @@ void InttEventDisplay::Display_rhoz()
   v->RequestDraw();
 }
 
-void InttEventDisplay::DrawTracks()
+void InttEventDisplay::drawTracks()
 {
   int numtrack = m_tracks.size();
   cout << "number of tracks = " << numtrack << endl;
@@ -1638,7 +1674,7 @@ void InttEventDisplay::DrawTracks()
   cout << "counter =" << counter << endl;
 }
 
-void InttEventDisplay::DrawClusters()
+void InttEventDisplay::drawClusters()
 {
   int npoints = m_clusters.size();
   cout << "npoints = " << npoints << endl;
@@ -1650,6 +1686,7 @@ void InttEventDisplay::DrawClusters()
     return;
   }
 
+  m_ps = new TEvePointSet(npoints);
   m_ps->SetOwnIds(kTRUE);
 
   int counter = 0;
@@ -1661,18 +1698,18 @@ void InttEventDisplay::DrawClusters()
     m_ps->SetPointId(new TNamed(Form("Point %d", counter), ""));
     counter++;
   }
-
+  
   m_ps->SetMarkerColor(2);
   m_ps->SetMarkerSize(1.2);
   m_ps->SetMarkerStyle(4);
 }
 
-void InttEventDisplay::DrawVertex()
+void InttEventDisplay::drawVertex()
 {
   
   int nvertex = m_vertex.size();
   cout << "nvertex = " << nvertex << endl;
-  m_psv = new TEvePointSet(nvertex);
+  //m_psv = new TEvePointSet(nvertex);
 
   if(nvertex==0){
     cout<<"No vertex!"<<endl;
@@ -1698,9 +1735,8 @@ void InttEventDisplay::DrawVertex()
 
 }
 
-void InttEventDisplay::DrawHits()
+void InttEventDisplay::drawHits()
 {
-  
   int nhits = m_hits.size();
   cout << "nhits = " << nhits << endl;
   m_psh = new TEvePointSet(nhits);

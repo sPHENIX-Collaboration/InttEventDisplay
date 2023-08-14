@@ -40,6 +40,8 @@ class PHField;
 class PHFieldUtility;
 class PHFieldConfig;
 class PHG4Reco;
+class PHGeomUtility;
+//class PHG4GDMLUtility;
 
 class InttG4HitRead;
 
@@ -85,27 +87,17 @@ class InttEventDisplay : public SubsysReco
 
 //////
 
-  //void drawCanvas();
-  //void drawHit();
-  //void make_ladderlocationfile();
-  //void DrawHit_rphi();
-  void DrawTracks();
-  void DrawHits();
-  void DrawVertex();
-  void DrawClusters();
+  void drawTracks();
+  void drawHits();
+  void drawVertex();
+  void drawClusters();
   void Display_3D();
   void Display_rphi();
   void Display_rhoz();
-  
-  //void clear();
-  
-  //bool Tracking = true;
  
 
  private:
   TCanvas *m_c1;
-
-  //std::vector<TMarker*> vPos;
   
   std::vector<Acts::Vector3> m_clusters;
   std::vector<Acts::Vector3> m_hits;
@@ -117,6 +109,8 @@ class InttEventDisplay : public SubsysReco
   TEvePointSet * m_psv;
   TEvePointSet * m_psh;
   TEveTrackList * m_list;
+
+  int ievt =0;
 
   double Point[4] = {0};
   
