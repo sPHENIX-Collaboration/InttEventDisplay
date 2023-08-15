@@ -12,6 +12,8 @@ How to use INTT Event Display
         3. /sphenix/u/mfujiwara/Workspace/tutorials/inttgitclone/AnaTutorial/macro/Fun4All_Anatutorial_Intt.C
             * This code sets input file by L503, InttRawData *inttraw = new InttRawData("Inttraw", inputfilename);
             * This code sets outputfile name by L59, const string &outputFile = outputfilename,
+	All necessary codes can be found /sphenix/u/mfujiwara/Workspace/tutorials/inttgitclone/AnaTutorial/
+	I recommend that you copy this entire directory.
               
 3. Use Event display
     1. Command 
