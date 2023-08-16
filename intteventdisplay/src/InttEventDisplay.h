@@ -5,6 +5,10 @@
 #include <trackbase/TrkrDefs.h>
 #include <Acts/Definitions/Algebra.hpp>
 #include <TEveTrack.h>
+#include <TGeoVolume.h>
+#include <TGeoNode.h>
+#include <TGLAnnotation.h>
+#include <TGLViewer.h>
 
 #include <vector>
 
@@ -48,6 +52,8 @@ class InttG4HitRead;
 /////
 class TCanvas;
 class TMarker;
+class TGeoVolume;
+class TGeoNode;
 /////
 
 
@@ -87,17 +93,35 @@ class InttEventDisplay : public SubsysReco
 
 //////
 
+  //void drawCanvas();
+  //void drawHit();
+  //void make_ladderlocationfile();
+  //void DrawHit_rphi();
   void drawTracks();
   void drawHits();
   void drawVertex();
   void drawClusters();
+  void drawall();
+
+  void PrintEidNclusters();
+
+  void getMatrices(std::string name, TGeoVolume *world, TGeoNode *node);
+  void extractinttgeom();
+
   void Display_3D();
   void Display_rphi();
   void Display_rhoz();
+  void Display_2D();
+  
+  //void clear();
+  
+  //bool Tracking = true;
  
 
  private:
   TCanvas *m_c1;
+
+  //std::vector<TMarker*> vPos;
   
   std::vector<Acts::Vector3> m_clusters;
   std::vector<Acts::Vector3> m_hits;
@@ -110,7 +134,11 @@ class InttEventDisplay : public SubsysReco
   TEvePointSet * m_psh;
   TEveTrackList * m_list;
 
+  TGLViewer * v;
+  TGLAnnotation * an;
+
   int ievt =0;
+  int k=0; //numbering TGeoVolume 
 
   double Point[4] = {0};
   
