@@ -1543,7 +1543,7 @@ void InttEventDisplay::Display_rphi()
   v->RequestDraw();
 }
 
-void InttEventDisplay::Display_rhoz()
+void InttEventDisplay::Display_rhoz(TGLViewer::ECameraType Camera)
 {
   TEveManager::Terminate();
   TEveManager::Create();
@@ -1562,8 +1562,9 @@ void InttEventDisplay::Display_rhoz()
   gEve->GetDefaultViewer()->AddScene(s);
   v = gEve->GetDefaultGLViewer();
   Double_t camcenter[3] = {0., 0., 0.};
-  v->SetOrthoCamera(TGLViewer::kCameraOrthoZOY, 5, 100, &camcenter[0], 0., 0.);
-  v->SetCurrentCamera(TGLViewer::kCameraOrthoZOY);
+  //TGLViewer::ECameraType Camera = TGLViewer::kCameraOrthoXOZ;
+  v->SetOrthoCamera(Camera, 5, 100, &camcenter[0], 0., 0.);
+  v->SetCurrentCamera(Camera);
   v->SetClearColor(kWhite);
 
   InttEventDisplay::PrintEidNclusters();

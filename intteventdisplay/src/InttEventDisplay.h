@@ -110,7 +110,7 @@ class InttEventDisplay : public SubsysReco
 
   void Display_3D();
   void Display_rphi();
-  void Display_rhoz();
+  void Display_rhoz(TGLViewer::ECameraType Camera = TGLViewer::kCameraOrthoZOY);
   void Display_2D();
   
   //void clear();
