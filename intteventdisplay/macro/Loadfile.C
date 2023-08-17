@@ -19,7 +19,7 @@
 #include <Trkr_Clustering.C>
 #include <Trkr_LaserClustering.C>
 #include <Trkr_Reco.C>
-#include <Trkr_Eval.C>
+//#include <Trkr_Eval.C>
 #include <Trkr_QA.C>
 
 #include <Trkr_Diagnostics.C>
@@ -76,21 +76,31 @@ void Loadfile(string inputfilename="/sphenix/u/mfujiwara/Workspace/tutorials/int
   rc->set_uint64Flag("TIMESTAMP", CDB::timestamp);
 
   TrackingInit();
+  cout<<"Finish TrackingInit"<<endl;
   
   Tracking_Reco();
+  cout<<"Finish TrackingReco"<<endl;
 
   inttEventDisplay = new InttEventDisplay("inttEventDisplay", outputroot + "_inttEventDisplay.root");
+  cout<<"Finish definition intteventdisplay"<<endl;
   
   inttEventDisplay->setMinJetPt(10.);
+  cout<<"finish set min jetpt"<<endl;
   inttEventDisplay->Verbosity(0);
+  cout<<"finish set verbosity"<<endl;
   inttEventDisplay->analyzeTracks(true);
+  cout<<"finish set analyze tracks true"<<endl;
   inttEventDisplay->analyzeClusters(true);
+  cout<<"finish set analyze clusters true"<<endl;
   inttEventDisplay->analyzeJets(false);
   inttEventDisplay->analyzeTruth(false);
   inttEventDisplay->useTruthClusters(false);
  
   se->registerSubsystem(inttEventDisplay);
+  cout<<"finish register subsystem"<<endl;
   se->run(nEvents);
+  cout<<"finish run"<<endl;
 
+  //cout<<"event number = "<<nEvents<<endl;
   return 0;
 }

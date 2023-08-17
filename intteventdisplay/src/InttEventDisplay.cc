@@ -110,6 +110,7 @@
 #include <TEveViewer.h>
 #include <TEveWindow.h>
 #include <TEveBrowser.h>
+#include <TGLCameraOverlay.h>
 //#include <g4gdml/PHG4GDMLUtility.hh>
 //////////////
 
@@ -1526,22 +1527,16 @@ void InttEventDisplay::Display_rphi()
   TEveProjectionManager *mng =
       new TEveProjectionManager(TEveProjection::kPT_RPhi);
   s->AddElement(mng);
-  //TEveProjectionAxes *axes = new TEveProjectionAxes(mng);
-  //axes->SetTitle("TEveProjections demo");
-  //s->AddElement(axes);
-  //gEve->AddToListTree(axes, kTRUE);
-  
-  TEveProjectionAxes* a = new TEveProjectionAxes(mng);
-  a->SetMainColor(kBlack);
-  a->SetTitle("R-Phi");
-  a->SetTitleSize(10);
-  a->SetTitleFont(102);
-  a->SetLabelSize(10);
-  a->SetLabelFont(102);
-  s->AddElement(a);
+  TEveProjectionAxes *axes = new TEveProjectionAxes(mng);
+  axes->SetTitle("TEveProjections demo");
+  s->AddElement(axes);
+  gEve->AddToListTree(axes, kTRUE);
 
+  //scale
+  TGLCameraOverlay* glovlay = v->GetCameraOverlay();
+  glovlay->SetShowOrthographic(1);
+  
   gEve->GetDefaultViewer()->AddScene(s);
-  gEve->AddToListTree(a, kTRUE);
   gEve->AddToListTree(mng, kTRUE);
 
   gEve->Redraw3D(kFALSE, kTRUE);
@@ -1582,6 +1577,10 @@ void InttEventDisplay::Display_rhoz()
   s->AddElement(axes);
   gEve->AddToListTree(axes, kTRUE);
   gEve->AddToListTree(mng, kTRUE);
+
+  //scale
+  TGLCameraOverlay* glovlay =v->GetCameraOverlay();
+  glovlay->SetShowOrthographic(1);
 
   gEve->Redraw3D(kFALSE, kFALSE);
   v->RequestDraw();
