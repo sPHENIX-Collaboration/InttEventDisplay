@@ -1473,11 +1473,11 @@ void InttEventDisplay::Display_3D()
   InttEventDisplay::drawall();
 
   // geometry load
-  gGeoManager = gEve->GetGeometry("/sphenix/u/mfujiwara/Documents/inttgeometry.root");
+  gGeoManager = gEve->GetGeometry("/sphenix/u/mfujiwara/Documents/inttgeometry_black.root ");
   //InttEventDisplay::extractinttgeom();
   TEveGeoTopNode *geom = new TEveGeoTopNode(gGeoManager, gGeoManager->GetTopNode());
   geom->CanEditMainTransparency();
-  geom->SetMainTransparency(50);
+  geom->SetMainTransparency(75);
   gEve->AddGlobalElement(geom);
 
   // x,y,z axis show
@@ -1485,6 +1485,7 @@ void InttEventDisplay::Display_3D()
   v = ev->GetGLViewer();
   v->SetGuideState(TGLUtil::kAxesOrigin, kTRUE, kFALSE, 0);
 
+  v->SetClearColor(kWhite);
   PrintEidNclusters();
 
   // Camera control
@@ -1775,7 +1776,7 @@ void InttEventDisplay::PrintEidNclusters(){
   string legend = "eid :"+to_string(ievt-1)+", Nclusters: "+to_string(m_clusters.size());
   an = new TGLAnnotation(v,legend.c_str(),0.05,0.95);
   an->SetTextSize(0.05);
-  an->SetTextColor(kWhite);
+  an->SetTextColor(kBlack);
 }
 
 void InttEventDisplay::drawall(){
