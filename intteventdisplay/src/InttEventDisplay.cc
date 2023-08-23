@@ -187,11 +187,12 @@ int InttEventDisplay::process_event(PHCompositeNode *topNode)
     // Get some Nodes. INTT geometry + hit container
     getNode(topNode);
 
-    m_hits = writeInttHits(topNode);
-    cout << "number of hits is " << m_hits.size() << endl;
-
     m_clusters = writeInttClusters(topNode);
     cout << "number of clusters is " << m_clusters.size() << endl;
+    if(m_clusters.size()>=3) return Fun4AllReturnCodes::ABORTRUN;
+
+    m_hits = writeInttHits(topNode);
+    cout << "number of hits is " << m_hits.size() << endl;
 
     m_tracks = writeInttTracks(topNode);
     cout << "number of tracks is " << m_tracks.size() << endl;
@@ -238,6 +239,7 @@ int InttEventDisplay::End(PHCompositeNode * /*topNode*/)
         cout << "Ending AnaTutorial analysis package" << endl;
     }
 
+    /*
     /// Change to the outfile
     m_outfile->cd();
 
@@ -280,6 +282,7 @@ int InttEventDisplay::End(PHCompositeNode * /*topNode*/)
     {
         cout << "Finished AnaTutorial analysis package" << endl;
     }
+    */
 
     return 0;
 }
