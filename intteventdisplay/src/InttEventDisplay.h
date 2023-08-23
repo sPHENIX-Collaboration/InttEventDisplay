@@ -93,10 +93,6 @@ class InttEventDisplay : public SubsysReco
 
 //////
 
-  //void drawCanvas();
-  //void drawHit();
-  //void make_ladderlocationfile();
-  //void DrawHit_rphi();
   void drawTracks();
   void drawHits();
   void drawVertex();
@@ -104,6 +100,7 @@ class InttEventDisplay : public SubsysReco
   void drawall();
 
   void PrintEidNclusters();
+  void showScale();
 
   void getMatrices(std::string name, TGeoVolume *world, TGeoNode *node);
   void extractinttgeom();
@@ -111,23 +108,14 @@ class InttEventDisplay : public SubsysReco
   void Display_3D();
   void Display_rphi();
   void Display_rhoz(TGLViewer::ECameraType Camera = TGLViewer::kCameraOrthoZOY);
-  void Display_2D();
   
-  //void clear();
-  
-  //bool Tracking = true;
- 
-
  private:
   TCanvas *m_c1;
 
-  //std::vector<TMarker*> vPos;
-  
   std::vector<Acts::Vector3> m_clusters;
   std::vector<Acts::Vector3> m_hits;
   std::vector<Acts::Vector3> m_tracks;
   std::vector<Acts::Vector3> m_vertex;
-  std::vector<double> m_bfield;
      
   TEvePointSet * m_ps;
   TEvePointSet * m_psv;
@@ -139,8 +127,6 @@ class InttEventDisplay : public SubsysReco
 
   int ievt =0;
   int k=0; //numbering TGeoVolume 
-
-  double Point[4] = {0};
   
   
 //////
