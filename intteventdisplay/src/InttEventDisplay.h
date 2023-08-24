@@ -99,8 +99,9 @@ class InttEventDisplay : public SubsysReco
   void drawClusters();
   void drawall();
 
-  void PrintEidNclusters();
-  void showScale();
+  void PrintEidNclusters(TGLViewer*vi);
+  void showScale(TGLViewer*vi);
+  void Loadgeom();
 
   void getMatrices(std::string name, TGeoVolume *world, TGeoNode *node);
   void extractinttgeom();
@@ -108,7 +109,15 @@ class InttEventDisplay : public SubsysReco
   void Display_3D();
   void Display_rphi();
   void Display_rhoz(TGLViewer::ECameraType Camera = TGLViewer::kCameraOrthoZOY);
+  void Display_2D();
   
+  void rphiviewer(TGLViewer*vi);
+  void rhozviewer(TGLViewer*vi,TGLViewer::ECameraType Camera = TGLViewer::kCameraOrthoZOY);
+
+  void setting_3dGLViewer(TGLViewer*vi);
+  void setting_rphiGLViewer(TGLViewer*vi);
+  void setting_rhozGLViewer(TGLViewer*vi,TGLViewer::ECameraType Camera);
+
  private:
   TCanvas *m_c1;
 
@@ -116,14 +125,16 @@ class InttEventDisplay : public SubsysReco
   std::vector<Acts::Vector3> m_hits;
   std::vector<Acts::Vector3> m_tracks;
   std::vector<Acts::Vector3> m_vertex;
-     
+ 
   TEvePointSet * m_ps;
   TEvePointSet * m_psv;
   TEvePointSet * m_psh;
   TEveTrackList * m_list;
 
-  TGLViewer * v;
+  //TGLViewer * v;
   TGLAnnotation * an;
+  
+  Double_t camcenter[3] = {0., 0., 0.};
 
   int ievt =0;
   int k=0; //numbering TGeoVolume 

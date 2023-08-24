@@ -62,6 +62,7 @@
 #include <TNtuple.h>
 #include <TTree.h>
 #include <TSystem.h>
+#include <TGTab.h>
 
 //TEve
 #include <TEveManager.h>
@@ -76,6 +77,8 @@
 #include <TEveViewer.h>
 #include <TEveWindow.h>
 #include <TEveBrowser.h>
+#include <TEveBrowser.h>
+#include <TEveGedEditor.h>
 
 //TGeo
 #include <TGeoManager.h>
@@ -88,6 +91,7 @@
 #include <TGLOrthoCamera.h>
 #include <TGLAnnotation.h>
 #include <TGLCameraOverlay.h>
+#include <TGLEmbeddedViewer.h>
 
 /// C++ includes
 #include <cassert>
@@ -693,12 +697,7 @@ std::vector<Acts::Vector3> InttEventDisplay ::writeInttTracks(PHCompositeNode *t
         // cout << "pz =" << m_tr_pz << endl;
         globt(2) = m_tr_pz;
         tracks.push_back(globt);
-
-        m_tr_p = sqrt(m_tr_px * m_tr_px + m_tr_py * m_tr_py + m_tr_pz * m_tr_pz);
-        // cout << "m_tr_p =" << m_tr_p << endl;
     }
-
-    // Tracking = false;
     return tracks;
 }
 
@@ -751,27 +750,19 @@ void InttEventDisplay::Display_3D()
     InttEventDisplay::drawall();
 
     // geometry load
-    gGeoManager = gEve->GetGeometry("/sphenix/u/mfujiwara/Documents/inttgeometry_black.root ");
+    gGeoManager = gEve->GetGeometry("/sphenix/u/mfujiwara/Documents/inttgeometry_black.root");
     // InttEventDisplay::extractinttgeom();
     TEveGeoTopNode *geom = new TEveGeoTopNode(gGeoManager, gGeoManager->GetTopNode());
     geom->CanEditMainTransparency();
     geom->SetMainTransparency(75);
     gEve->AddGlobalElement(geom);
 
-    // x,y,z axis show
     TEveViewer *ev = gEve->GetDefaultViewer();
-    v = ev->GetGLViewer();
-    v->SetGuideState(TGLUtil::kAxesOrigin, kTRUE, kFALSE, 0);
-
-    v->SetClearColor(kWhite);
-    PrintEidNclusters();
-
-    // Camera control
-    Double_t camcenter[3] = {0., 0., 0.};
-    gSystem->ProcessEvents();
-    v->CurrentCamera().RotateRad(0, -3.14 / 2);
-    v->SetPerspectiveCamera(TGLViewer::kCameraPerspXOZ, 2, 30, &camcenter[0], 0, 0);
-
+    TGLViewer*v = ev->GetGLViewer();
+   
+    InttEventDisplay::setting_3dGLViewer(v);
+    PrintEidNclusters(v);
+   
     v->RequestDraw();
     gEve->Redraw3D(kFALSE, kFALSE);
 }
@@ -782,44 +773,10 @@ void InttEventDisplay::Display_rphi()
     TEveManager::Create();
 
     InttEventDisplay::drawall();
+    InttEventDisplay::Loadgeom();
 
-    // geometry load
-    gGeoManager = gEve->GetGeometry("/sphenix/u/mfujiwara/Documents/inttgeometry_rphi_black2mm.root");
-    // InttEventDisplay::extractinttgeom();
-    TEveGeoTopNode *geom = new TEveGeoTopNode(gGeoManager, gGeoManager->GetTopNode());
-    geom->CanEditMainTransparency();
-    geom->SetMainTransparency(0);
-    gEve->AddGlobalElement(geom);
-
-    // camera
-    TEveScene *s = gEve->SpawnNewScene("Projected Event");
-    // gEve->GetDefaultViewer()->AddScene(s);
-    v = gEve->GetDefaultGLViewer();
-    Double_t camcenter[3] = {0., 0., 0.};
-    v->SetOrthoCamera(TGLViewer::kCameraOrthoXOY, 5, 100, &camcenter[0], 0., 0.);
-    v->SetCurrentCamera(TGLViewer::kCameraOrthoXOY);
-    v->SetClearColor(kWhite);
-
-    InttEventDisplay::PrintEidNclusters();
-
-    // projections
-    TEveProjectionManager *mng =
-        new TEveProjectionManager(TEveProjection::kPT_RPhi);
-    s->AddElement(mng);
-    TEveProjectionAxes *axes = new TEveProjectionAxes(mng);
-    axes->SetTitle("TEveProjections demo");
-    s->AddElement(axes);
-    gEve->AddToListTree(axes, kTRUE);
-
-    // scale
-    TGLCameraOverlay *glovlay = v->GetCameraOverlay();
-    glovlay->SetShowOrthographic(1);
-
-    gEve->GetDefaultViewer()->AddScene(s);
-    gEve->AddToListTree(mng, kTRUE);
-
-    gEve->Redraw3D(kFALSE, kTRUE);
-    v->RequestDraw();
+    TGLViewer*vi = gEve->GetDefaultGLViewer();
+    InttEventDisplay::rphiviewer(vi);
 }
 
 void InttEventDisplay::Display_rhoz(TGLViewer::ECameraType Camera)
@@ -828,42 +785,10 @@ void InttEventDisplay::Display_rhoz(TGLViewer::ECameraType Camera)
     TEveManager::Create();
 
     InttEventDisplay::drawall();
+    InttEventDisplay::Loadgeom();
 
-    // geometry load
-    gGeoManager = gEve->GetGeometry("/sphenix/u/mfujiwara/Documents/inttgeometry_rphi_black2mm.root");
-    TEveGeoTopNode *geom = new TEveGeoTopNode(gGeoManager, gGeoManager->GetTopNode());
-    geom->CanEditMainTransparency();
-    geom->SetMainTransparency(0);
-    gEve->AddGlobalElement(geom);
-
-    // camera
-    TEveScene *s = gEve->SpawnNewScene("Projected Event");
-    gEve->GetDefaultViewer()->AddScene(s);
-    v = gEve->GetDefaultGLViewer();
-    Double_t camcenter[3] = {0., 0., 0.};
-    // TGLViewer::ECameraType Camera = TGLViewer::kCameraOrthoXOZ;
-    v->SetOrthoCamera(Camera, 5, 100, &camcenter[0], 0., 0.);
-    v->SetCurrentCamera(Camera);
-    v->SetClearColor(kWhite);
-
-    InttEventDisplay::PrintEidNclusters();
-
-    // projections
-    TEveProjectionManager *mng =
-        new TEveProjectionManager(TEveProjection::kPT_RhoZ);
-    s->AddElement(mng);
-    TEveProjectionAxes *axes = new TEveProjectionAxes(mng);
-    axes->SetTitle("TEveProjections demo");
-    s->AddElement(axes);
-    gEve->AddToListTree(axes, kTRUE);
-    gEve->AddToListTree(mng, kTRUE);
-
-    // scale
-    TGLCameraOverlay *glovlay = v->GetCameraOverlay();
-    glovlay->SetShowOrthographic(1);
-
-    gEve->Redraw3D(kFALSE, kFALSE);
-    v->RequestDraw();
+    TGLViewer*vi = gEve->GetDefaultGLViewer();
+    InttEventDisplay::rhozviewer(vi,Camera);
 }
 
 void InttEventDisplay::drawTracks()
@@ -874,7 +799,7 @@ void InttEventDisplay::drawTracks()
 
     if (numtrack == 0)
     {
-        cout << "No track!" << endl;
+        cout << "No track data" << endl;
         m_list = nullptr;
         return;
     }
@@ -909,12 +834,12 @@ void InttEventDisplay::drawTracks()
 void InttEventDisplay::drawClusters()
 {
     int npoints = m_clusters.size();
-    cout << "npoints = " << npoints << endl;
+    cout << "Nclusters = " << npoints << endl;
     m_ps = new TEvePointSet(npoints);
 
     if (npoints == 0)
     {
-        cout << "No Cluster!" << endl;
+        cout << "No Cluster data" << endl;
         m_ps = nullptr;
         return;
     }
@@ -946,7 +871,7 @@ void InttEventDisplay::drawVertex()
 
     if (nvertex == 0)
     {
-        cout << "No vertex!" << endl;
+        cout << "No vertex data" << endl;
         m_psv = nullptr;
         return;
     }
@@ -976,7 +901,7 @@ void InttEventDisplay::drawHits()
 
     if (nhits == 0)
     {
-        cout << "No hit!" << endl;
+        cout << "No hit data" << endl;
         m_psh = nullptr;
         return;
     }
@@ -1043,18 +968,18 @@ void InttEventDisplay::extractinttgeom()
     gGeoManager->CloseGeometry();
 }
 
-void InttEventDisplay::PrintEidNclusters()
+void InttEventDisplay::PrintEidNclusters(TGLViewer*vi)
 {
     string legend = "eid :" + to_string(ievt - 1) + ", Nclusters: " + to_string(m_clusters.size());
-    an = new TGLAnnotation(v, legend.c_str(), 0.05, 0.95);
+    an = new TGLAnnotation(vi, legend.c_str(), 0.05, 0.95);
     an->SetTextSize(0.05);
     an->SetTextColor(kBlack);
 }
 
-void InttEventDisplay::showScale()
+void InttEventDisplay::showScale(TGLViewer*vi)
 {
     // scale
-    TGLCameraOverlay *glovlay = v->GetCameraOverlay();
+    TGLCameraOverlay *glovlay = vi->GetCameraOverlay();
     glovlay->SetShowOrthographic(1);
 }
 
@@ -1084,4 +1009,130 @@ void InttEventDisplay::drawall()
     {
         gEve->AddElement(m_psv);
     }
+}
+
+void InttEventDisplay::setting_3dGLViewer(TGLViewer*vi){
+  //show xyz axes
+  vi->SetGuideState(TGLUtil::kAxesOrigin, kTRUE, kFALSE, 0);
+
+  //set background color
+  vi->SetClearColor(kWhite);
+
+  //set initial camera angle
+  vi->CurrentCamera().RotateRad(0, -3.14 / 2);
+  vi->SetPerspectiveCamera(TGLViewer::kCameraPerspXOZ, 2, 30, &camcenter[0], 0, 0);
+}
+
+void InttEventDisplay::setting_rphiGLViewer(TGLViewer*vi){
+  //set background color
+  vi->SetClearColor(kWhite);
+
+  //set initial camera
+  vi->SetOrthoCamera(TGLViewer::kCameraOrthoXOY, 9, 100, &camcenter[0], 0., 0.);
+  vi->SetCurrentCamera(TGLViewer::kCameraOrthoXOY);
+}
+
+void InttEventDisplay::setting_rhozGLViewer(TGLViewer*vi,TGLViewer::ECameraType Camera){
+  //set background color
+  vi->SetClearColor(kWhite);
+  
+  //set initial camera
+  vi->SetOrthoCamera(Camera, 4, 100, &camcenter[0], 0., 0.);
+  vi->SetCurrentCamera(Camera); 
+}
+
+void InttEventDisplay::Loadgeom(){
+  // geometry load
+  gGeoManager = gEve->GetGeometry("/sphenix/u/mfujiwara/Documents/inttgeometry_rphi_black2mm.root");
+  TEveGeoTopNode *geom = new TEveGeoTopNode(gGeoManager, gGeoManager->GetTopNode());
+  geom->CanEditMainTransparency();
+  geom->SetMainTransparency(0);
+  gEve->AddGlobalElement(geom);
+}
+
+void InttEventDisplay::rphiviewer(TGLViewer*vi){
+
+  TEveScene *s = gEve->SpawnNewScene("Rphi Projected Event");
+  gEve->GetDefaultViewer()->AddScene(s);
+  
+  //vi = gEve->GetDefaultGLViewer();
+  InttEventDisplay::setting_rphiGLViewer(vi);
+  
+  InttEventDisplay::PrintEidNclusters(vi);
+  InttEventDisplay::showScale(vi);
+  
+  // projections
+  TEveProjectionManager *mng =
+    new TEveProjectionManager(TEveProjection::kPT_RPhi);
+  s->AddElement(mng);
+  gEve->AddToListTree(mng, kTRUE);
+  
+  gEve->Redraw3D(kFALSE, kTRUE);
+  //v->RequestDraw();
+}
+
+void InttEventDisplay::rhozviewer(TGLViewer*vi,TGLViewer::ECameraType Camera){
+  TEveScene *s = gEve->SpawnNewScene("Rhoz Projected Event");
+  gEve->GetDefaultViewer()->AddScene(s);
+  //v = gEve->GetDefaultGLViewer();
+  InttEventDisplay::setting_rhozGLViewer(vi,Camera);
+  InttEventDisplay::PrintEidNclusters(vi);
+  InttEventDisplay::showScale(vi);
+  
+  // projections
+  TEveProjectionManager *mng =
+    new TEveProjectionManager(TEveProjection::kPT_RhoZ);
+  s->AddElement(mng);
+  gEve->AddToListTree(mng, kTRUE);
+  
+  gEve->Redraw3D(kFALSE, kFALSE);
+  //v->RequestDraw();
+}
+
+void InttEventDisplay::Display_2D(){
+  TEveManager::Terminate();
+  TEveManager::Create();
+
+  InttEventDisplay::drawall();
+
+  TEveWindowSlot *slot = 0;
+  TEveViewer *rphiv = 0;
+  TEveViewer *rhozv = 0;
+  TEveWindowPack *pack1;
+  TEveWindowPack *pack2;
+
+  InttEventDisplay::Loadgeom();
+
+  slot = TEveWindow::CreateWindowInTab(gEve->GetBrowser()->GetTabRight());
+  pack1 = slot->MakePack();
+  pack1->SetShowTitleBar(kFALSE);
+  pack1->SetElementName("2D Viewer");
+  pack1->SetHorizontal();
+  
+  // rphiviewer
+  slot = pack1->NewSlot();
+  rphiv = new TEveViewer("rphi viewer");
+  rphiv->SpawnGLEmbeddedViewer(gEve->GetEditor());
+  InttEventDisplay::rphiviewer(rphiv->GetGLViewer());
+  slot->ReplaceWindow(rphiv);
+  rphiv->SetElementName("rphi viewer");
+  gEve->GetViewers()->AddElement(rphiv);
+  rphiv->AddScene(gEve->GetGlobalScene());
+  rphiv->AddScene(gEve->GetEventScene());
+
+  //rhozviewer
+  slot = pack1->NewSlot();
+  pack2 = slot->MakePack();
+  pack2->SetShowTitleBar(kFALSE);
+  slot = pack2->NewSlot();
+  rhozv = new TEveViewer("rhoz viewer");
+  rhozv->SpawnGLViewer(gEve->GetEditor());
+  InttEventDisplay::rhozviewer(rhozv->GetGLViewer());
+  slot->ReplaceWindow(rhozv);
+  rhozv->SetElementName("rhoz viewer");
+  gEve->GetViewers()->AddElement(rhozv);
+  rhozv->AddScene(gEve->GetGlobalScene());
+  rhozv->AddScene(gEve->GetEventScene());
+
+  gEve->GetBrowser()->GetTabRight()->SetTab(1);
 }
