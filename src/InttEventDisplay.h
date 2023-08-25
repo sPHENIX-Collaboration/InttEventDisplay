@@ -93,30 +93,46 @@ class InttEventDisplay : public SubsysReco
 
 //////
 
-  void drawTracks();
-  void drawHits();
-  void drawVertex();
-  void drawClusters();
-  void drawall();
+  //input vector to TEveTrack
+  void DrawTracks();
+
+  //input vector to TEvePoint
+  void DrawHits();
+  void DrawVertex();
+  void DrawClusters();
+
+  //do other Draw functions
+  void Drawall();
 
   void PrintEidNclusters(TGLViewer*vi);
-  void showScale(TGLViewer*vi);
+  void ShowScale(TGLViewer*vi);
   void Loadgeom();
 
-  void getMatrices(std::string name, TGeoVolume *world, TGeoNode *node);
-  void extractinttgeom();
+  //get intt geometry from default gGeoManager
+  void GetMatrices(std::string name, TGeoVolume *world, TGeoNode *node);
+  void Extractinttgeom();
 
+  //display event only one kind viewer
   void Display_3D();
   void Display_rphi();
   void Display_rhoz(TGLViewer::ECameraType Camera = TGLViewer::kCameraOrthoZOY);
-  void Display_2D();
-  
-  void rphiviewer(TGLViewer*vi);
-  void rhozviewer(TGLViewer*vi,TGLViewer::ECameraType Camera = TGLViewer::kCameraOrthoZOY);
 
-  void setting_3dGLViewer(TGLViewer*vi);
-  void setting_rphiGLViewer(TGLViewer*vi);
-  void setting_rhozGLViewer(TGLViewer*vi,TGLViewer::ECameraType Camera);
+  //display event 3D, rphi and rhoz projection at once
+  void display();
+  
+  //make viewer
+  void RPhiViewer(TGLViewer*vi);
+  void RhoZViewer(TGLViewer*vi,TGLViewer::ECameraType Camera = TGLViewer::kCameraOrthoZOY);
+  void ThreeDViewer(TGLViewer*vi);
+
+  //make tab and input viewer
+  void Make_2DViewerTab();
+  void Make_3DViewerTab();
+
+  //setting camera angle and background color of each viewer
+  void Setting_3dGLViewer(TGLViewer*vi);
+  void Setting_rphiGLViewer(TGLViewer*vi);
+  void Setting_rhozGLViewer(TGLViewer*vi,TGLViewer::ECameraType Camera);
 
  private:
   TCanvas *m_c1;
@@ -131,7 +147,6 @@ class InttEventDisplay : public SubsysReco
   TEvePointSet * m_psh;
   TEveTrackList * m_list;
 
-  //TGLViewer * v;
   TGLAnnotation * an;
   
   Double_t camcenter[3] = {0., 0., 0.};
