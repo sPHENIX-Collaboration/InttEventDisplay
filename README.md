@@ -8,8 +8,9 @@ How to use INTT Event Display
 	1. mkdir build
  	2. cd build 
  	3. ../autogen --prefix=$MYINSTALL
+
      		MYINSTALL is your install directory. You can set this enviroment variable by export function in bash shell.
-  	4. make && make install
+  	5. make && make install
 
        	Please refer to this web page to build the package of fun4all
 	https://github.com/sPHENIX-Collaboration/tutorials/tree/master/AnaTutorial
