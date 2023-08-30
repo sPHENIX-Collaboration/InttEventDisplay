@@ -193,8 +193,7 @@ int InttEventDisplay::process_event(PHCompositeNode *topNode)
 
     m_clusters = writeInttClusters(topNode);
     cout << "number of clusters is " << m_clusters.size() << endl;
-    if(m_clusters.size()>=3) return Fun4AllReturnCodes::ABORTRUN;
-
+    
     m_hits = writeInttHits(topNode);
     cout << "number of hits is " << m_hits.size() << endl;
 
@@ -203,6 +202,11 @@ int InttEventDisplay::process_event(PHCompositeNode *topNode)
 
     m_vertex = writeInttVertex(topNode);
     cout << "number of vertex is " << m_vertex.size() << endl;
+
+    if(m_clusters.size()>=3){
+      InttEventDisplay::display();
+      return Fun4AllReturnCodes::ABORTRUN;
+    }
 
     // cout tracks
     /*
