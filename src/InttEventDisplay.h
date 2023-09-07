@@ -9,6 +9,8 @@
 #include <TGeoNode.h>
 #include <TGLAnnotation.h>
 #include <TGLViewer.h>
+#include <TEveViewer.h>
+#include <TEveManager.h>
 
 #include <vector>
 
@@ -88,8 +90,13 @@ class InttEventDisplay : public SubsysReco
   void analyzeClusters(bool analyzeClusters) { m_analyzeClusters = analyzeClusters; }
   void analyzeJets(bool analyzeJets) { m_analyzeJets = analyzeJets; }
   void analyzeTruth(bool analyzeTruth) { m_analyzeTruth = analyzeTruth; }
-  void useTruthClusters(bool useTruthClusters){ m_useTruthClusters = useTruthClusters; };
+  void useTruthClusters(bool useTruthClusters){ m_useTruthClusters = useTruthClusters; }
 
+  //Set the minimum number of cluster to cut on
+  void setMinNClus(int mincluster)  { m_mincluster = mincluster; }
+
+  //save or not save picture
+  void savePictures(bool savePictures) { m_savePictures = savePictures; }
 
 //////
 
@@ -134,6 +141,13 @@ class InttEventDisplay : public SubsysReco
   void Setting_rphiGLViewer(TGLViewer*vi);
   void Setting_rhozGLViewer(TGLViewer*vi,TGLViewer::ECameraType Camera);
 
+  void SnapShot();
+
+  void Terminate();
+  void VectorClear();
+
+  //TEveManager*gEve=0;
+
  private:
   TCanvas *m_c1;
 
@@ -142,17 +156,25 @@ class InttEventDisplay : public SubsysReco
   std::vector<Acts::Vector3> m_tracks;
   std::vector<Acts::Vector3> m_vertex;
  
-  TEvePointSet * m_ps;
-  TEvePointSet * m_psv;
-  TEvePointSet * m_psh;
-  TEveTrackList * m_list;
+  TEvePointSet * m_ps = nullptr;
+  TEvePointSet * m_psv = nullptr;
+  TEvePointSet * m_psh = nullptr;
+  TEveTrackList * m_list = nullptr;
 
-  TGLAnnotation * an;
+  TEveViewer *rphiev = 0;
+  TEveViewer *rhozev = 0;
+  
+  //TGLViewer * rphiv = nullptr;
+  //TGLViewer * rhozv =  nullptr;
+
+  TGLAnnotation * an = nullptr;
   
   Double_t camcenter[3] = {0., 0., 0.};
 
   int ievt =0;
   int k=0; //numbering TGeoVolume 
+
+  //int m_mincluster;
   
   
 //////
@@ -183,6 +205,12 @@ class InttEventDisplay : public SubsysReco
   bool m_analyzeTruth;
 
   bool m_useTruthClusters;
+
+  // A int for cutting on number of cluster
+  int m_mincluster;
+
+  // A boolean for saving picture
+  bool m_savePictures;
 
   /// TFile to hold the following TTrees and histograms
   TFile *m_outfile;

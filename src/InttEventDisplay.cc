@@ -125,7 +125,7 @@ using namespace std;
  * Constructor of module
  */
 InttEventDisplay::InttEventDisplay(const std::string &name, const std::string &filename)
-    : SubsysReco(name), m_outfilename(filename), m_hm(nullptr), m_minjetpt(5.0), m_mincluspt(0.25), m_analyzeTracks(true), m_analyzeClusters(true), m_analyzeJets(true), m_analyzeTruth(false)
+  : SubsysReco(name), m_outfilename(filename), m_hm(nullptr), m_minjetpt(5.0), m_mincluspt(0.25), m_analyzeTracks(true), m_analyzeClusters(true), m_analyzeJets(true), m_analyzeTruth(false),m_mincluster(3),m_savePictures(false)
 {
     /// Initialize variables and trees so we don't accidentally access
     /// memory that was never allocated
@@ -193,7 +193,8 @@ int InttEventDisplay::process_event(PHCompositeNode *topNode)
 
     m_clusters = writeInttClusters(topNode);
     cout << "number of clusters is " << m_clusters.size() << endl;
-    
+    //if(m_clusters.size()>=3) return Fun4AllReturnCodes::ABORTRUN;
+
     m_hits = writeInttHits(topNode);
     cout << "number of hits is " << m_hits.size() << endl;
 
@@ -203,7 +204,7 @@ int InttEventDisplay::process_event(PHCompositeNode *topNode)
     m_vertex = writeInttVertex(topNode);
     cout << "number of vertex is " << m_vertex.size() << endl;
 
-    if(m_clusters.size()>=3){
+    if((int)m_clusters.size()>=m_mincluster){
       InttEventDisplay::display();
       return Fun4AllReturnCodes::ABORTRUN;
     }
@@ -748,14 +749,15 @@ std::vector<Acts::Vector3> InttEventDisplay ::writeInttVertex(PHCompositeNode *t
 
 void InttEventDisplay::Display_3D()
 {
-    TEveManager::Terminate();
-    TEveManager::Create();
-
-    InttEventDisplay::Drawall();
-    InttEventDisplay::Loadgeom();
-
-    TGLViewer*v = gEve->GetDefaultGLViewer();
-    InttEventDisplay::ThreeDViewer(v);
+  TEveManager::Terminate();
+  //InttEventDisplay::Terminate();
+  TEveManager::Create();
+  
+  InttEventDisplay::Drawall();
+  InttEventDisplay::Loadgeom();
+  
+  TGLViewer*v = gEve->GetDefaultGLViewer();
+  InttEventDisplay::ThreeDViewer(v);
 }
 
 void InttEventDisplay::Display_rphi()
@@ -765,9 +767,20 @@ void InttEventDisplay::Display_rphi()
 
     InttEventDisplay::Drawall();
     InttEventDisplay::Loadgeom();
-
+    
     TGLViewer*vi = gEve->GetDefaultGLViewer();
+    //InttEventDisplay::Setting_rphiGLViewer(vi);
+  
+    //InttEventDisplay::PrintEidNclusters(vi);
+    //InttEventDisplay::ShowScale(vi);
     InttEventDisplay::RPhiViewer(vi);
+
+    gEve->GetViewers()->SwitchColorSet();
+    gEve->Redraw3D(kFALSE,kFALSE);
+
+    gSystem->ProcessEvents();
+    //gEve->GetDefaultGLViewer()->SavePicture("rphiviewer.png");
+
 }
 
 void InttEventDisplay::Display_rhoz(TGLViewer::ECameraType Camera)
@@ -780,6 +793,14 @@ void InttEventDisplay::Display_rhoz(TGLViewer::ECameraType Camera)
 
     TGLViewer*vi = gEve->GetDefaultGLViewer();
     InttEventDisplay::RhoZViewer(vi,Camera);
+
+    gEve->GetViewers()->SwitchColorSet();
+    gEve->Redraw3D(kFALSE,kFALSE);
+
+    //gEve->GetMainWindow()->SaveAs("screenshotviewer.png");
+    gSystem->ProcessEvents();
+
+    //vi->SavePicture("rhozviewer.png");
 }
 
 void InttEventDisplay::DrawTracks()
@@ -849,7 +870,7 @@ void InttEventDisplay::DrawClusters()
     }
 
     m_ps->SetMarkerColor(2);
-    m_ps->SetMarkerSize(1.2);
+    m_ps->SetMarkerSize(2.0);
     m_ps->SetMarkerStyle(4);
 }
 
@@ -1058,8 +1079,9 @@ void InttEventDisplay::RPhiViewer(TGLViewer*vi){
   s->AddElement(mng);
   gEve->AddToListTree(mng, kTRUE);
   
-  gEve->Redraw3D(kFALSE, kTRUE);
-  //v->RequestDraw();
+  vi->RequestDraw();
+  //gEve->Redraw3D(kFALSE, kTRUE);
+  //vi->RequestDraw();
 }
 
 void InttEventDisplay::RhoZViewer(TGLViewer*vi,TGLViewer::ECameraType Camera){
@@ -1076,8 +1098,7 @@ void InttEventDisplay::RhoZViewer(TGLViewer*vi,TGLViewer::ECameraType Camera){
   s->AddElement(mng);
   gEve->AddToListTree(mng, kTRUE);
   
-  gEve->Redraw3D(kFALSE, kFALSE);
-  //v->RequestDraw();
+  //vi->RequestDraw();
 }
 
  void InttEventDisplay::ThreeDViewer(TGLViewer*vi){
@@ -1098,13 +1119,25 @@ void InttEventDisplay::display(){
   InttEventDisplay::Make_3DViewerTab();
 
   gEve->GetViewers()->SwitchColorSet();
+  gEve->Redraw3D(kFALSE, kFALSE);
+
+  gSystem->ProcessEvents();
+  
+  if(m_savePictures == true){
+    string rphiviewerpicture = "eid"+to_string(ievt - 1)+"rphiviewer.png";
+    string rhozviewerpicture = "eid"+to_string(ievt - 1)+"rhozviewer.png";
+    rphiev->GetGLViewer()->SavePictureUsingFBO(rphiviewerpicture.c_str(),1280,720,kTRUE);
+    rhozev->GetGLViewer()->SavePictureUsingFBO(rhozviewerpicture.c_str(),1280,720,kTRUE);
+    cout<<"Saved rhpi and rhoz viewer pictures"<<endl;
+  }
+
   gEve->GetBrowser()->GetTabRight()->SetTab(1);
 }
 
 void InttEventDisplay::Make_2DViewerTab(){
   TEveWindowSlot *slot = 0;
-  TEveViewer *rphiv = 0;
-  TEveViewer *rhozv = 0;
+  //TEveViewer *rphiv = 0;
+  //TEveViewer *rhozv = 0;
   TEveWindowPack *pack1;
 
   slot = TEveWindow::CreateWindowInTab(gEve->GetBrowser()->GetTabRight());
@@ -1115,25 +1148,27 @@ void InttEventDisplay::Make_2DViewerTab(){
   
   // rphiviewer
   slot = pack1->NewSlot();
-  rphiv = new TEveViewer("rphi viewer");
-  rphiv->SpawnGLEmbeddedViewer(gEve->GetEditor());
-  InttEventDisplay::RPhiViewer(rphiv->GetGLViewer());
-  slot->ReplaceWindow(rphiv);
-  rphiv->SetElementName("rphi viewer");
-  gEve->GetViewers()->AddElement(rphiv);
-  rphiv->AddScene(gEve->GetGlobalScene());
-  rphiv->AddScene(gEve->GetEventScene());
+  rphiev = new TEveViewer("rphi viewer");
+  rphiev->SpawnGLEmbeddedViewer(gEve->GetEditor());
+  //rphiv = rphiev->GetGLViewer();
+  InttEventDisplay::RPhiViewer(rphiev->GetGLViewer());
+  slot->ReplaceWindow(rphiev);
+  rphiev->SetElementName("rphi viewer");
+  gEve->GetViewers()->AddElement(rphiev);
+  rphiev->AddScene(gEve->GetGlobalScene());
+  rphiev->AddScene(gEve->GetEventScene());
 
   //rhozviewer
   slot = pack1->NewSlot();
-  rhozv = new TEveViewer("rhoz viewer");
-  rhozv->SpawnGLViewer(gEve->GetEditor());
-  InttEventDisplay::RhoZViewer(rhozv->GetGLViewer());
-  slot->ReplaceWindow(rhozv);
-  rhozv->SetElementName("rhoz viewer");
-  gEve->GetViewers()->AddElement(rhozv);
-  rhozv->AddScene(gEve->GetGlobalScene());
-  rhozv->AddScene(gEve->GetEventScene());
+  rhozev = new TEveViewer("rhoz viewer");
+  rhozev->SpawnGLViewer(gEve->GetEditor());
+  //rhozv = rhozev->GetGLViewer();
+  InttEventDisplay::RhoZViewer(rhozev->GetGLViewer());
+  slot->ReplaceWindow(rhozev);
+  rhozev->SetElementName("rhoz viewer");
+  gEve->GetViewers()->AddElement(rhozev);
+  rhozev->AddScene(gEve->GetGlobalScene());
+  rhozev->AddScene(gEve->GetEventScene());
 }
 
  void InttEventDisplay::Make_3DViewerTab(){
@@ -1157,3 +1192,89 @@ void InttEventDisplay::Make_2DViewerTab(){
    evev->AddScene(gEve->GetGlobalScene());
    evev->AddScene(gEve->GetEventScene());
  }
+
+ void InttEventDisplay::SnapShot(){
+   TEveManager::Terminate();
+   TEveManager::Create();
+   
+   InttEventDisplay::Drawall();
+   InttEventDisplay::Loadgeom();
+   
+   InttEventDisplay::Make_2DViewerTab();
+
+   rphiev->Redraw(kFALSE);
+   rhozev->Redraw(kFALSE);
+
+   gEve->GetViewers()->SwitchColorSet();
+   gEve->Redraw3D(kFALSE,kFALSE);
+
+   //gEve->GetMainWindow()->SaveAs("screenshotviewer.png");
+   gSystem->ProcessEvents();
+
+   rphiev->GetGLViewer()->SavePicture("rphiviewer.png");
+   rhozev->GetGLViewer()->SavePicture("rhozviewer.png");
+    
+   //rphiv->SavePicture("rphiviewer.png");
+   //rhozv->SavePicture("rhozviewer.png");
+ }
+
+ void InttEventDisplay::Terminate(){
+   TEveManager::Terminate();
+   
+   if(m_ps != nullptr){
+     delete m_ps;
+     m_ps = nullptr;
+   }
+
+   if(m_psv != nullptr){
+     delete m_psv;
+     m_psv = nullptr;
+   }
+   
+   if(m_psh != nullptr){
+     delete m_psh;
+     m_psh = nullptr;
+   }
+
+   if(m_list != nullptr){
+     delete m_list;
+     m_list = nullptr;
+   }
+
+   if(rphiev != nullptr){
+     delete rphiev;
+     rphiev = nullptr;
+   }
+
+   if(rhozev != nullptr){
+     delete rhozev;
+     rhozev = nullptr;
+   }
+
+   if(an != nullptr){
+     delete an;
+     an = nullptr;
+   }
+}
+
+void InttEventDisplay::VectorClear(){
+  if(m_clusters.size()!=0){
+    m_clusters.clear();
+    m_clusters.shrink_to_fit();
+  }
+
+  if(m_hits.size()!=0){
+    m_hits.clear();
+    m_hits.shrink_to_fit();
+  }
+  
+  if(m_tracks.size()!=0){
+    m_tracks.clear();
+    m_tracks.shrink_to_fit();
+  }
+  
+  if(m_vertex.size()!=0){
+    m_vertex.clear();
+    m_vertex.shrink_to_fit();
+  }
+}
