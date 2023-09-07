@@ -15,12 +15,10 @@ How to use INTT Event Display
 	https://github.com/sPHENIX-Collaboration/tutorials/tree/master/AnaTutorial
 
 4. Use Event display
-    1. Set data file.  
-   	InttEventDisplay/macro/Loadfile.C set inputfile name by L51. 
-    2. Enter the Commands in the order.
-       1. root Loadfile.C  
-          Data loaded from the begining and stop run until found a event, Ncluster > 2.
-       2. inttEventDislay->display()  
-          Display x-y and y-z plane and 3D viewer. 3DViewer is displayed another tab.
-       3. se->run(0)  
-          Resume data load until find a next event, Ncluster > 2.
+ Enter the Commands in the order.
+   1. bash InttEventDisplay.sh filepath NClusters true or false 
+	DST file is read from the beginning until an event with more clusters than NCluster is found, and then an event display window opens. 
+	Display x-y and y-z plane and 3D viewer. 3DViewer is displayed another tab. 
+	If the 3rd argument is true, the image is saved; if false, it is not saved. 
+   2. se->run(0) 
+      	Resume data load until find a next event, which has clusters bigger than NClusters.
