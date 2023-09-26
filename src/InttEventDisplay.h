@@ -11,8 +11,12 @@
 #include <TGLViewer.h>
 #include <TEveViewer.h>
 #include <TEveManager.h>
+#include <TEveGeoNode.h>
+#include <TEveProjectionManager.h>
+#include <TEveWindow.h>
 
 #include <vector>
+#include <string>
 
 /// Class declarations for use in the analysis module
 class Fun4AllHistoManager;
@@ -92,11 +96,15 @@ class InttEventDisplay : public SubsysReco
   void analyzeTruth(bool analyzeTruth) { m_analyzeTruth = analyzeTruth; }
   void useTruthClusters(bool useTruthClusters){ m_useTruthClusters = useTruthClusters; }
 
-  //Set the minimum number of cluster to cut on
+  //Set the minimum and max number of cluster to cut on
   void setMinNClus(int mincluster)  { m_mincluster = mincluster; }
+  void setMaxNClus(int maxcluster)  { m_maxcluster = maxcluster; }
 
   //save or not save picture
   void savePictures(bool savePictures) { m_savePictures = savePictures; }
+
+  //setting directory data saved
+  void setSaveDirectory(std::string saveDirectory) {m_saveDirectory = saveDirectory;}
 
 //////
 
@@ -163,11 +171,23 @@ class InttEventDisplay : public SubsysReco
 
   TEveViewer *rphiev = 0;
   TEveViewer *rhozev = 0;
+  TEveViewer * evev = 0;
+
+  TEveProjectionManager * rphimng;
+  TEveProjectionManager * rhozmng;
+
+  TEveGeoTopNode * inttgeom;
   
   //TGLViewer * rphiv = nullptr;
   //TGLViewer * rhozv =  nullptr;
 
   TGLAnnotation * an = nullptr;
+
+  TEveWindowSlot *slot2D = 0;
+  TEveWindowPack *pack2D = 0;
+
+  TEveWindowSlot *slot3D = 0;
+  TEveWindowPack *pack3D = 0;
   
   Double_t camcenter[3] = {0., 0., 0.};
 
@@ -208,9 +228,13 @@ class InttEventDisplay : public SubsysReco
 
   // A int for cutting on number of cluster
   int m_mincluster;
+  int m_maxcluster;
 
   // A boolean for saving picture
   bool m_savePictures;
+
+  // A string for setting directory data saved
+  std::string m_saveDirectory;
 
   /// TFile to hold the following TTrees and histograms
   TFile *m_outfile;

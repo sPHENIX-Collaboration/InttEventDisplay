@@ -37,7 +37,7 @@
 #include <phool/PHRandomSeed.h>
 #include <phool/recoConsts.h>
 
-#include <../src/InttEventDisplay.h>
+#include <InttEventDisplay.h>
 
 R__LOAD_LIBRARY(libintteventdisplay.so)
 R__LOAD_LIBRARY(libfun4all.so)
@@ -46,16 +46,17 @@ R__LOAD_LIBRARY(libffamodules.so)
 InttEventDisplay*inttEventDisplay;
 Fun4AllServer * se;// = Fun4AllServer::instance();
 
-void Loadfile(string inputfilename="/sphenix/u/mfujiwara/Workspace/tutorials/inttgitclone/AnaTutorial/macro/dst_intt_cosmic_run25184.root",
-	      /*"/sphenix/u/mfujiwara/Workspace/tutorials/inttgitclone/AnaTutorial/macro/dst_intt_run20869.root"*/
-	      int minclus =3, bool savePictures=false){
+void Loadfile(string inputfilename=/*"/sphenix/u/mfujiwara/Workspace/tutorials/inttgitclone/AnaTutorial/macro/dst_intt_cosmic_run25184.root",*/
+	      "/sphenix/u/mfujiwara/Workspace/tutorials/inttgitclone/AnaTutorial/macro/dst_intt_run20869.root",
+	      int minclus =4,int maxclus=50, bool savePictures=true,
+string saveDirectory="/sphenix/u/mfujiwara/Workspace/tutorials/inttgitclone/work/pictures"){
   
   const char*inputfile = inputfilename.c_str();
   se = Fun4AllServer::instance();
   se->Verbosity(0);
   const string &outputFile = "G4sPHENIX";
   string outputroot = outputFile;
-  const int nEvents = 0;
+  const int nEvents = 30;
 
   Fun4AllInputManager*in = new Fun4AllDstInputManager("DSTin");
   in->fileopen(inputfile);
@@ -88,9 +89,22 @@ void Loadfile(string inputfilename="/sphenix/u/mfujiwara/Workspace/tutorials/int
   inttEventDisplay->analyzeTruth(false);
   inttEventDisplay->useTruthClusters(false);
   inttEventDisplay->setMinNClus(minclus);
+  inttEventDisplay->setMaxNClus(maxclus);
   inttEventDisplay->savePictures(savePictures);
+  inttEventDisplay->setSaveDirectory(saveDirectory);
 
   se->registerSubsystem(inttEventDisplay);
   se->run(nEvents);
+  
+  //se->End();
+  //std::cout << "All done" << std::endl;
+  //delete se;
+//--  if (Enable::PRODUCTION)
+//--  {
+//--    Production_MoveOutput();
+//--  }
+
+  //gSystem->Exit(0);
+  
   return 0;
 }

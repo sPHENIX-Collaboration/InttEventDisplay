@@ -125,7 +125,7 @@ using namespace std;
  * Constructor of module
  */
 InttEventDisplay::InttEventDisplay(const std::string &name, const std::string &filename)
-  : SubsysReco(name), m_outfilename(filename), m_hm(nullptr), m_minjetpt(5.0), m_mincluspt(0.25), m_analyzeTracks(true), m_analyzeClusters(true), m_analyzeJets(true), m_analyzeTruth(false),m_mincluster(3),m_savePictures(false)
+  : SubsysReco(name), m_outfilename(filename), m_hm(nullptr), m_minjetpt(5.0), m_mincluspt(0.25), m_analyzeTracks(true), m_analyzeClusters(true), m_analyzeJets(true), m_analyzeTruth(false),m_mincluster(3),m_maxcluster(10000),m_savePictures(false),m_saveDirectory()
 {
     /// Initialize variables and trees so we don't accidentally access
     /// memory that was never allocated
@@ -191,20 +191,39 @@ int InttEventDisplay::process_event(PHCompositeNode *topNode)
     // Get some Nodes. INTT geometry + hit container
     getNode(topNode);
 
+    if(m_clusters.size()!=0){
+      m_clusters.clear();
+      m_clusters.shrink_to_fit();
+    }
+  
     m_clusters = writeInttClusters(topNode);
     cout << "number of clusters is " << m_clusters.size() << endl;
-    //if(m_clusters.size()>=3) return Fun4AllReturnCodes::ABORTRUN;
+   
+    if(m_hits.size()!=0){
+      m_hits.clear();
+      m_hits.shrink_to_fit();
+    }
 
     m_hits = writeInttHits(topNode);
     cout << "number of hits is " << m_hits.size() << endl;
 
+    if(m_tracks.size()!=0){
+      m_tracks.clear();
+      m_tracks.shrink_to_fit();
+    }
+
     m_tracks = writeInttTracks(topNode);
     cout << "number of tracks is " << m_tracks.size() << endl;
+
+    if(m_vertex.size()!=0){
+      m_vertex.clear();
+      m_vertex.shrink_to_fit();
+    }
 
     m_vertex = writeInttVertex(topNode);
     cout << "number of vertex is " << m_vertex.size() << endl;
 
-    if((int)m_clusters.size()>=m_mincluster){
+    if((int)m_clusters.size()>=m_mincluster&&(int)m_clusters.size()<=m_maxcluster){
       InttEventDisplay::display();
       return Fun4AllReturnCodes::ABORTRUN;
     }
@@ -703,6 +722,7 @@ std::vector<Acts::Vector3> InttEventDisplay ::writeInttTracks(PHCompositeNode *t
         globt(2) = m_tr_pz;
         tracks.push_back(globt);
     }
+    
     return tracks;
 }
 
@@ -807,18 +827,31 @@ void InttEventDisplay::DrawTracks()
 {
     int numtrack = m_tracks.size();
     cout << "number of tracks = " << numtrack << endl;
-    m_list = new TEveTrackList();
+    /*
+    if(m_list){
+      delete m_list;
+      m_list = nullptr;
+    }
+    */
+    //m_list = new TEveTrackList();
 
     if (numtrack == 0)
     {
         cout << "No track data" << endl;
         m_list = nullptr;
         return;
+    }else{
+      m_list = nullptr;
+      delete m_list;
+      m_list = new TEveTrackList();
     }
 
     TEveTrackPropagator *prop = m_list->GetPropagator();
     TEveTrack *track[numtrack];
-    TEveRecTrackD *rc = new TEveRecTrackD();
+    TEveRecTrackD *rc;
+    rc = nullptr;
+    delete rc;
+    rc = new TEveRecTrackD();
     int counter = 0;
 
     prop->SetMagFieldObj(new TEveMagFieldConst(0., 0., 0.));
@@ -847,16 +880,28 @@ void InttEventDisplay::DrawClusters()
 {
     int npoints = m_clusters.size();
     cout << "Nclusters = " << npoints << endl;
-    m_ps = new TEvePointSet(npoints);
+    //m_ps = new TEvePointSet(npoints);
 
+    
+    if(npoints != 0){
+      m_ps = nullptr;
+      delete m_ps;
+      cout<<"delete m_ps"<<endl;
+      m_ps = new TEvePointSet(npoints);
+      cout<<"new m_ps"<<endl;
+      //m_ps = nullptr;
+    }
+    
     if (npoints == 0)
     {
-        cout << "No Cluster data" << endl;
-        m_ps = nullptr;
-        return;
+      //m_ps = new TEvePointSet(npoints);
+      //cout<<"new m_ps"<<endl;
+      cout << "No Cluster data" << endl;
+      m_ps = nullptr;
+      return;
     }
 
-    m_ps = new TEvePointSet(npoints);
+    //m_ps = new TEvePointSet(npoints);
     m_ps->SetOwnIds(kTRUE);
 
     int counter = 0;
@@ -886,9 +931,13 @@ void InttEventDisplay::DrawVertex()
         cout << "No vertex data" << endl;
         m_psv = nullptr;
         return;
+    }else{
+      m_psv = nullptr;
+      delete m_psv;
+      m_psv = new TEvePointSet(nvertex);
     }
 
-    m_psv = new TEvePointSet(nvertex);
+    //m_psv = new TEvePointSet(nvertex);
     m_psv->SetOwnIds(kTRUE);
 
     int counter = 0;
@@ -909,13 +958,17 @@ void InttEventDisplay::DrawHits()
 {
     int nhits = m_hits.size();
     cout << "nhits = " << nhits << endl;
-    m_psh = new TEvePointSet(nhits);
+    //m_psh = new TEvePointSet(nhits);
 
     if (nhits == 0)
     {
         cout << "No hit data" << endl;
         m_psh = nullptr;
         return;
+    }else{
+      m_psh=nullptr;
+      delete m_psh;
+      m_psh = new TEvePointSet(nhits);
     }
 
     m_psh->SetOwnIds(kTRUE);
@@ -982,10 +1035,12 @@ void InttEventDisplay::Extractinttgeom()
 
 void InttEventDisplay::PrintEidNclusters(TGLViewer*vi)
 {
-    string legend = "eid :" + to_string(ievt - 1) + ", Nclusters: " + to_string(m_clusters.size());
-    an = new TGLAnnotation(vi, legend.c_str(), 0.05, 0.95);
-    an->SetTextSize(0.05);
-    an->SetTextColor(kBlack);
+  an = nullptr;
+  delete an;
+  string legend = "eid :" + to_string(ievt - 1) + ", Nclusters: " + to_string(m_clusters.size());
+  an = new TGLAnnotation(vi, legend.c_str(), 0.05, 0.95);
+  an->SetTextSize(0.05);
+  an->SetTextColor(kBlack);
 }
 
 void InttEventDisplay::ShowScale(TGLViewer*vi)
@@ -1054,17 +1109,22 @@ void InttEventDisplay::Setting_rhozGLViewer(TGLViewer*vi,TGLViewer::ECameraType 
 }
 
 void InttEventDisplay::Loadgeom(){
+  inttgeom=nullptr;
+  delete inttgeom;
+
   // geometry load
   gGeoManager = gEve->GetGeometry("/sphenix/u/mfujiwara/Documents/inttgeometry_rphi_black2mm.root");
-  TEveGeoTopNode *geom = new TEveGeoTopNode(gGeoManager, gGeoManager->GetTopNode());
-  geom->CanEditMainTransparency();
-  geom->SetMainTransparency(70);
-  gEve->AddGlobalElement(geom);
+  inttgeom = new TEveGeoTopNode(gGeoManager, gGeoManager->GetTopNode());
+  inttgeom->CanEditMainTransparency();
+  inttgeom->SetMainTransparency(70);
+  gEve->AddGlobalElement(inttgeom);
 }
 
 void InttEventDisplay::RPhiViewer(TGLViewer*vi){
 
-  TEveScene *s = gEve->SpawnNewScene("Rphi Projected Event");
+  TEveScene *s = nullptr;
+  delete s;
+  s = gEve->SpawnNewScene("Rphi Projected Event");
   gEve->GetDefaultViewer()->AddScene(s);
   
   //vi = gEve->GetDefaultGLViewer();
@@ -1074,10 +1134,11 @@ void InttEventDisplay::RPhiViewer(TGLViewer*vi){
   InttEventDisplay::ShowScale(vi);
   
   // projections
-  TEveProjectionManager *mng =
-    new TEveProjectionManager(TEveProjection::kPT_RPhi);
-  s->AddElement(mng);
-  gEve->AddToListTree(mng, kTRUE);
+  rphimng = nullptr;
+  delete rphimng;
+  rphimng = new TEveProjectionManager(TEveProjection::kPT_RPhi);
+  s->AddElement(rphimng);
+  gEve->AddToListTree(rphimng, kTRUE);
   
   vi->RequestDraw();
   //gEve->Redraw3D(kFALSE, kTRUE);
@@ -1085,7 +1146,9 @@ void InttEventDisplay::RPhiViewer(TGLViewer*vi){
 }
 
 void InttEventDisplay::RhoZViewer(TGLViewer*vi,TGLViewer::ECameraType Camera){
-  TEveScene *s = gEve->SpawnNewScene("Rhoz Projected Event");
+  TEveScene *s = nullptr;
+  delete s;
+  s= gEve->SpawnNewScene("Rhoz Projected Event");
   gEve->GetDefaultViewer()->AddScene(s);
   //v = gEve->GetDefaultGLViewer();
   InttEventDisplay::Setting_rhozGLViewer(vi,Camera);
@@ -1093,10 +1156,11 @@ void InttEventDisplay::RhoZViewer(TGLViewer*vi,TGLViewer::ECameraType Camera){
   InttEventDisplay::ShowScale(vi);
   
   // projections
-  TEveProjectionManager *mng =
-    new TEveProjectionManager(TEveProjection::kPT_RhoZ);
-  s->AddElement(mng);
-  gEve->AddToListTree(mng, kTRUE);
+  rhozmng = nullptr;
+  delete rhozmng;
+  rhozmng = new TEveProjectionManager(TEveProjection::kPT_RhoZ);
+  s->AddElement(rhozmng);
+  gEve->AddToListTree(rhozmng, kTRUE);
   
   //vi->RequestDraw();
 }
@@ -1111,6 +1175,7 @@ void InttEventDisplay::RhoZViewer(TGLViewer*vi,TGLViewer::ECameraType Camera){
 void InttEventDisplay::display(){
   TEveManager::Terminate();
   TEveManager::Create();
+  //TEveManager::Create(kFALSE);
 
   InttEventDisplay::Drawall();
   InttEventDisplay::Loadgeom();
@@ -1124,47 +1189,66 @@ void InttEventDisplay::display(){
   gSystem->ProcessEvents();
   
   if(m_savePictures == true){
-    string rphiviewerpicture = "eid"+to_string(ievt - 1)+"rphiviewer.png";
-    string rhozviewerpicture = "eid"+to_string(ievt - 1)+"rhozviewer.png";
+    
+    string rphiviewerpicture = m_saveDirectory+"eid"+to_string(ievt - 1)+"rphiviewer.png";
+    string rhozviewerpicture = m_saveDirectory+"eid"+to_string(ievt - 1)+"rhozviewer.png";
     rphiev->GetGLViewer()->SavePictureUsingFBO(rphiviewerpicture.c_str(),1280,720,kTRUE);
     rhozev->GetGLViewer()->SavePictureUsingFBO(rhozviewerpicture.c_str(),1280,720,kTRUE);
     cout<<"Saved rhpi and rhoz viewer pictures"<<endl;
+    
+    /*
+    static int j =0;
+      if(j==0){
+	rphiev->GetGLViewer()->SavePicture("2DViewer.pdf[");
+	rhozev->GetGLViewer()->SavePicture("2DViewer.pdf");
+	j++;
+      }else{
+	rphiev->GetGLViewer()->SavePicture("2DViewer.pdf");
+	rhozev->GetGLViewer()->SavePicture("2DViewer.pdf");
+      }
+    */
+      //rphiev->GetGLViewer()->SavePicture("2DViewer.pdf");
+      //rhozev->GetGLViewer()->SavePicture("2DViewer.pdf");
   }
 
   gEve->GetBrowser()->GetTabRight()->SetTab(1);
 }
 
 void InttEventDisplay::Make_2DViewerTab(){
-  TEveWindowSlot *slot = 0;
-  //TEveViewer *rphiv = 0;
-  //TEveViewer *rhozv = 0;
-  TEveWindowPack *pack1;
+  slot2D = 0;
+  pack2D = 0;
+  delete slot2D;
+  delete pack2D;
 
-  slot = TEveWindow::CreateWindowInTab(gEve->GetBrowser()->GetTabRight());
-  pack1 = slot->MakePack();
-  pack1->SetShowTitleBar(kFALSE);
-  pack1->SetElementName("2D Viewer");
-  pack1->SetHorizontal();
+  slot2D = TEveWindow::CreateWindowInTab(gEve->GetBrowser()->GetTabRight());
+  pack2D = slot2D->MakePack();
+  pack2D->SetShowTitleBar(kFALSE);
+  pack2D->SetElementName("2D Viewer");
+  pack2D->SetHorizontal();
   
   // rphiviewer
-  slot = pack1->NewSlot();
+  slot2D = pack2D->NewSlot();
+  rphiev=nullptr;
+  delete rphiev;
   rphiev = new TEveViewer("rphi viewer");
   rphiev->SpawnGLEmbeddedViewer(gEve->GetEditor());
   //rphiv = rphiev->GetGLViewer();
   InttEventDisplay::RPhiViewer(rphiev->GetGLViewer());
-  slot->ReplaceWindow(rphiev);
+  slot2D->ReplaceWindow(rphiev);
   rphiev->SetElementName("rphi viewer");
   gEve->GetViewers()->AddElement(rphiev);
   rphiev->AddScene(gEve->GetGlobalScene());
   rphiev->AddScene(gEve->GetEventScene());
 
   //rhozviewer
-  slot = pack1->NewSlot();
+  slot2D = pack2D->NewSlot();
+  rhozev = nullptr;
+  delete rhozev;
   rhozev = new TEveViewer("rhoz viewer");
   rhozev->SpawnGLViewer(gEve->GetEditor());
   //rhozv = rhozev->GetGLViewer();
   InttEventDisplay::RhoZViewer(rhozev->GetGLViewer());
-  slot->ReplaceWindow(rhozev);
+  slot2D->ReplaceWindow(rhozev);
   rhozev->SetElementName("rhoz viewer");
   gEve->GetViewers()->AddElement(rhozev);
   rhozev->AddScene(gEve->GetGlobalScene());
@@ -1172,109 +1256,26 @@ void InttEventDisplay::Make_2DViewerTab(){
 }
 
  void InttEventDisplay::Make_3DViewerTab(){
-   TEveWindowSlot *slot = 0;
-   TEveViewer * evev = 0;
-   TEveWindowPack *pack1;
+   slot3D = 0;
+   evev = 0;
+   pack3D =0;
+   delete slot3D;
+   delete evev;
+   delete pack3D;
    
-   slot = TEveWindow::CreateWindowInTab(gEve->GetBrowser()->GetTabRight());
-   pack1 = slot->MakePack();
-   slot=pack1->NewSlot();
-   pack1->SetShowTitleBar(kFALSE);
-   pack1->SetElementName("3D Viewer");
+   slot3D = TEveWindow::CreateWindowInTab(gEve->GetBrowser()->GetTabRight());
+   pack3D = slot3D->MakePack();
+   slot3D=pack3D->NewSlot();
+   pack3D->SetShowTitleBar(kFALSE);
+   pack3D->SetElementName("3D Viewer");
 
    evev = new TEveViewer("3D Viewer");
    evev->SpawnGLEmbeddedViewer(gEve->GetEditor());
    InttEventDisplay::ThreeDViewer(evev->GetGLViewer());
-   slot->ReplaceWindow(evev);
+   slot3D->ReplaceWindow(evev);
    evev->SetElementName("3D viewer");
    gEve->GetViewers()->AddElement(evev);
 
    evev->AddScene(gEve->GetGlobalScene());
    evev->AddScene(gEve->GetEventScene());
  }
-
- void InttEventDisplay::SnapShot(){
-   TEveManager::Terminate();
-   TEveManager::Create();
-   
-   InttEventDisplay::Drawall();
-   InttEventDisplay::Loadgeom();
-   
-   InttEventDisplay::Make_2DViewerTab();
-
-   rphiev->Redraw(kFALSE);
-   rhozev->Redraw(kFALSE);
-
-   gEve->GetViewers()->SwitchColorSet();
-   gEve->Redraw3D(kFALSE,kFALSE);
-
-   //gEve->GetMainWindow()->SaveAs("screenshotviewer.png");
-   gSystem->ProcessEvents();
-
-   rphiev->GetGLViewer()->SavePicture("rphiviewer.png");
-   rhozev->GetGLViewer()->SavePicture("rhozviewer.png");
-    
-   //rphiv->SavePicture("rphiviewer.png");
-   //rhozv->SavePicture("rhozviewer.png");
- }
-
- void InttEventDisplay::Terminate(){
-   TEveManager::Terminate();
-   
-   if(m_ps != nullptr){
-     delete m_ps;
-     m_ps = nullptr;
-   }
-
-   if(m_psv != nullptr){
-     delete m_psv;
-     m_psv = nullptr;
-   }
-   
-   if(m_psh != nullptr){
-     delete m_psh;
-     m_psh = nullptr;
-   }
-
-   if(m_list != nullptr){
-     delete m_list;
-     m_list = nullptr;
-   }
-
-   if(rphiev != nullptr){
-     delete rphiev;
-     rphiev = nullptr;
-   }
-
-   if(rhozev != nullptr){
-     delete rhozev;
-     rhozev = nullptr;
-   }
-
-   if(an != nullptr){
-     delete an;
-     an = nullptr;
-   }
-}
-
-void InttEventDisplay::VectorClear(){
-  if(m_clusters.size()!=0){
-    m_clusters.clear();
-    m_clusters.shrink_to_fit();
-  }
-
-  if(m_hits.size()!=0){
-    m_hits.clear();
-    m_hits.shrink_to_fit();
-  }
-  
-  if(m_tracks.size()!=0){
-    m_tracks.clear();
-    m_tracks.shrink_to_fit();
-  }
-  
-  if(m_vertex.size()!=0){
-    m_vertex.clear();
-    m_vertex.shrink_to_fit();
-  }
-}
