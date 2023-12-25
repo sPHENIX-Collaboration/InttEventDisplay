@@ -106,6 +106,8 @@ class InttEventDisplay : public SubsysReco
   //setting directory data saved
   void setSaveDirectory(std::string saveDirectory) {m_saveDirectory = saveDirectory;}
 
+  void openWindowViewer(bool windowview) {m_windowView = windowview;}
+
 //////
 
   //input vector to TEveTrack
@@ -235,6 +237,9 @@ class InttEventDisplay : public SubsysReco
 
   // A string for setting directory data saved
   std::string m_saveDirectory;
+
+  // A boolean for viewer window open or not open
+  bool m_windowView;
 
   /// TFile to hold the following TTrees and histograms
   TFile *m_outfile;

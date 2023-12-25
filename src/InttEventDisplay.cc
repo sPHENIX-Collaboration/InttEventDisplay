@@ -225,7 +225,11 @@ int InttEventDisplay::process_event(PHCompositeNode *topNode)
 
     if((int)m_clusters.size()>=m_mincluster&&(int)m_clusters.size()<=m_maxcluster){
       InttEventDisplay::display();
-      return Fun4AllReturnCodes::ABORTRUN;
+      
+      if(m_windowView == true){
+	return Fun4AllReturnCodes::ABORTRUN;
+      }
+
     }
 
     // cout tracks
@@ -1174,8 +1178,12 @@ void InttEventDisplay::RhoZViewer(TGLViewer*vi,TGLViewer::ECameraType Camera){
 
 void InttEventDisplay::display(){
   TEveManager::Terminate();
-  TEveManager::Create();
-  //TEveManager::Create(kFALSE);
+
+  if(m_windowView == true){
+    TEveManager::Create();
+  }else{
+    TEveManager::Create(kFALSE);
+  }
 
   InttEventDisplay::Drawall();
   InttEventDisplay::Loadgeom();
