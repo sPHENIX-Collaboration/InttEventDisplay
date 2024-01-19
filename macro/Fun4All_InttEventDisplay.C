@@ -2,7 +2,7 @@
 
 #include <DisplayOn.C>
 #include <G4Setup_sPHENIX.C>
-#include <G4_Bbc.C>
+//#include <G4_Bbc.C>
 #include <G4_CaloTrigger.C>
 #include <G4_Centrality.C>
 #include <G4_DSTReader.C>
@@ -37,7 +37,7 @@
 #include <phool/PHRandomSeed.h>
 #include <phool/recoConsts.h>
 
-#include <InttEventDisplay.h>
+#include <../src/InttEventDisplay.h>
 
 R__LOAD_LIBRARY(libintteventdisplay.so)
 R__LOAD_LIBRARY(libfun4all.so)
@@ -46,9 +46,9 @@ R__LOAD_LIBRARY(libffamodules.so)
 InttEventDisplay*inttEventDisplay;
 Fun4AllServer * se;// = Fun4AllServer::instance();
 
-void InttEventDisplay(string inputfilename=/*"/sphenix/u/mfujiwara/Workspace/tutorials/inttgitclone/AnaTutorial/macro/dst_intt_cosmic_run25184.root",*/
+void Fun4All_InttEventDisplay(string inputfilename=/*"/sphenix/u/mfujiwara/Workspace/tutorials/inttgitclone/AnaTutorial/macro/dst_intt_cosmic_run25184.root",*/
 	      "/sphenix/u/mfujiwara/Workspace/tutorials/inttgitclone/AnaTutorial/macro/dst_intt_beam_run20868.root",
-	      int minclus =10,int maxclus=50, bool savePictures=true,bool windowview = false,
+	      int minclus =10,int maxclus=50, bool savePictures=false,bool windowview = true,
 string saveDirectory="/sphenix/u/mfujiwara/Workspace/tutorials/inttgitclone/InttEventDisplay/picture/run20868/"){
   
   const char*inputfile = inputfilename.c_str();
