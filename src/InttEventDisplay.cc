@@ -124,16 +124,16 @@ using namespace std;
 /**
  * Constructor of module
  */
-InttEventDisplay::InttEventDisplay(const std::string &name, const std::string &filename)
-  : SubsysReco(name), m_outfilename(filename), m_hm(nullptr), m_minjetpt(5.0), m_mincluspt(0.25), m_analyzeTracks(true), m_analyzeClusters(true), m_analyzeJets(true), m_analyzeTruth(false),m_mincluster(3),m_maxcluster(10000),m_savePictures(false),m_saveDirectory()
+InttEventDisplay::InttEventDisplay(const std::string &name/*, const std::string &filename*/)
+  : SubsysReco(name),/* m_outfilename(filename),*/ m_hm(nullptr), m_minjetpt(5.0), m_mincluspt(0.25), m_analyzeTracks(true), m_analyzeClusters(true), m_analyzeJets(true), m_analyzeTruth(false),m_mincluster(3),m_maxcluster(10000),m_savePictures(false),m_saveDirectory()
 {
     /// Initialize variables and trees so we don't accidentally access
     /// memory that was never allocated
-    initializeVariables();
-    initializeTrees();
+    //initializeVariables();
+    //initializeTrees();
 
     //
-    m_c1 = NULL;
+    //m_c1 = NULL;
 }
 
 /**
@@ -141,6 +141,7 @@ InttEventDisplay::InttEventDisplay(const std::string &name, const std::string &f
  */
 InttEventDisplay::~InttEventDisplay()
 {
+  /*
     delete m_hm;
     delete m_hepmctree;
     delete m_truthjettree;
@@ -150,6 +151,7 @@ InttEventDisplay::~InttEventDisplay()
     ///
     if (m_c1 != NULL)
         delete m_c1;
+  */
 }
 
 /**
@@ -161,11 +163,13 @@ int InttEventDisplay::Init(PHCompositeNode * /*topNode*/)
     {
         cout << "Beginning Init in InttEventDisplay" << endl;
     }
-
+    
+    /*
     m_outfile = new TFile(m_outfilename.c_str(), "RECREATE");
 
     m_phi_h = new TH1D("phi_h", ";Counts;#phi [rad]", 50, -6, 6);
     m_eta_phi_h = new TH2F("phi_eta_h", ";#eta;#phi [rad]", 10, -1, 1, 50, -6, 6);
+    */
 
     return 0;
 }

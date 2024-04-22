@@ -68,8 +68,8 @@ class InttEventDisplay : public SubsysReco
 {
  public:
   /// Constructor
-  InttEventDisplay(const std::string &name = "InttEventDisplay",
-		     const std::string &fname = "InttEventDisplay.root");
+  InttEventDisplay(const std::string &name = "InttEventDisplay"
+		   /*const std::string &fname = "InttEventDisplay.root"*/);
 
   // Destructor
   virtual ~InttEventDisplay();

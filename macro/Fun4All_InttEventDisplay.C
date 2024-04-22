@@ -79,7 +79,7 @@ string saveDirectory="/sphenix/u/mfujiwara/Workspace/tutorials/inttgitclone/Intt
   
   Tracking_Reco();
   
-  inttEventDisplay = new InttEventDisplay("inttEventDisplay", outputroot + "_inttEventDisplay.root");
+  inttEventDisplay = new InttEventDisplay("inttEventDisplay"/*, outputroot + "_inttEventDisplay.root"*/);
   
   //bool windowview = false;
   inttEventDisplay->setMinJetPt(10.);
